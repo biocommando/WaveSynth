@@ -1,0 +1,25 @@
+' Little, ugly gnome VST synth script file
+' Copyrights 2016 by Joonas Salonpaa
+
+' input parameters: 
+' %frequency
+' %noteDivision (1/noteDivision notes)
+' output: %output, new frequency as knob value
+
+#script-lfosync-noteLength = 60 / tempo
+#script-lfosync-noteLength = #script-lfosync-noteLength / %noteDivision
+#script-lfosync-noteLength = #script-lfosync-noteLength * 4
+' to Hz (the range is 0.01 to 5.01 Hz)
+#script-lfosync-freq = %frequency * 5
+#script-lfosync-freq = #script-lfosync-freq + 0.01
+#script-lfosync-length = 1 / #script-lfosync-freq
+#script-lfosync-length = #script-lfosync-length / #script-lfosync-noteLength
+#script-lfosync-length = #script-lfosync-length + 0.4999
+#script-lfosync-length truncate
+#script-lfosync-length = #script-lfosync-length * #script-lfosync-noteLength
+if #script-lfosync-length < 0.001
+	#script-lfosync-length = #script-lfosync-noteLength
+endif
+#script-lfosync-freq = 1 / #script-lfosync-length
+%output = #script-lfosync-freq - 0.01
+%output = %output * 0.2

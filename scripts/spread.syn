@@ -1,0 +1,21 @@
+' Little, ugly gnome VST synth script file
+' Copyrights 2016 by Joonas Salonpaa
+
+' Spreads the oscillators in the stereo image, takes parameters:
+' %width, %detune and %spread_mode
+' spread modes: 1 = pan and detune, 2 = only pan, 3 = only detune
+#spread-script_width = 0.5 - %width
+#spread-script_detune = 0.5 - %detune
+for #index 1 to 3
+	if %spread_mode = 3
+		#spread-script_width = 0.5
+	endif
+	Pan_? = #spread-script_width
+	#spread-script_width = #spread-script_width + %width
+	
+	if %spread_mode = 2
+		#spread-script_detune= 0.5
+	endif
+	Detune? = #spread-script_detune
+	#spread-script_detune = #spread-script_detune + %detune
+loop

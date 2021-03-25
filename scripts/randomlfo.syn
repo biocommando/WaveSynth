@@ -1,0 +1,28 @@
+' Little, ugly gnome VST synth script file
+' Copyrights 2016 by Joonas Salonpaa
+
+#index = 1
+:loop
+LFOShp? = random
+LFOFrq? = random
+LFO2Pt? = random * 0.08
+LFO2Cu? = random * 0.2
+LFO2Fl? = random * 0.5
+LFO2Fl? = LFO2Fl? * LFO2Fl?
+LFO2Lv? = random * 0.5
+LFO2Lv? = LFO2Lv? * LFO2Lv?
+#index = #index + 1
+if #index < 4
+	goto :loop
+endif
+
+LfoFreq = random
+LfoType = random
+L2Pan = random
+L2Level = random * 0.5
+L2Delay = random * 0.5
+L2Flang = random * 0.5
+L2Seq = 0
+L2Unisn = 0
+L2Clip = random
+L2Self = random

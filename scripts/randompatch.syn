@@ -1,0 +1,7 @@
+' Little, ugly gnome VST synth script file
+' Copyrights 2016 by Joonas Salonpaa
+
+for #index 1 to 3
+	Bank_? = random
+	Patch_? = random
+loop

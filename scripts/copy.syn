@@ -1,0 +1,11 @@
+' Little, ugly gnome VST synth script file
+' Copyrights 2016 by Joonas Salonpaa
+
+if %to < 4
+	call copy_from_to
+endif
+if %to = 4
+	for %to 1 to 3
+		call copy_from_to
+	loop
+endif

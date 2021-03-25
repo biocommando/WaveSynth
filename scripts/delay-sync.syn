@@ -1,0 +1,10 @@
+' Little, ugly gnome VST synth script file
+' Copyrights 2016 by Joonas Salonpaa
+' Input:
+' %delay-sync-length-quarters (delay length in quarter notes)
+#delay-sync-whole-note-length = 60 / tempo
+#delay-sync-length-factor = 0.25 * %delay-sync-length-quarters
+DelayTm = #delay-sync-whole-note-length * #delay-sync-length-factor
+if DelayTm > 1
+	DelayTm = 1
+endif

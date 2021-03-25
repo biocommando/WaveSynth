@@ -1,0 +1,50 @@
+' Little, ugly gnome VST synth script file
+' Copyrights 2016 by Joonas Salonpaa
+
+#index = %from
+#Bank_ = Bank_?
+#Patch_ = Patch_?
+#Loop = Loop?
+#CuePos = CuePos?
+#Octave = Octave?
+#Detune = Detune?
+#FCut_ = FCut_?
+#FRes_ = FRes_?
+#Wavshp = Wavshp?
+#Attack = Attack?
+#Decay = Decay?
+#Sust. = Sust.?
+#Tail. = Tail.?
+#E2Cut_ = E2Cut_?
+#LFOShp = LFOShp?
+#LFOFrq = LFOFrq?
+#LFO2Pt = LFO2Pt?
+#LFO2Cu = LFO2Cu?
+#LFO2Fl = LFO2Fl?
+#LFO2Lv = LFO2Lv?
+#Pan_ = Pan_?
+#Level_ = Level_?
+
+#index = %to
+Bank_? = #Bank_
+Patch_? = #Patch_
+Loop? = #Loop
+CuePos? = #CuePos
+Octave? = #Octave
+Detune? = #Detune
+FCut_? = #FCut_
+FRes_? = #FRes_
+Wavshp? = #Wavshp
+Attack? = #Attack
+Decay? = #Decay
+Sust.? = #Sust.
+Tail.? = #Tail.
+E2Cut_? = #E2Cut_
+LFOShp? = #LFOShp
+LFOFrq? = #LFOFrq
+LFO2Pt? = #LFO2Pt
+LFO2Cu? = #LFO2Cu
+LFO2Fl? = #LFO2Fl
+LFO2Lv? = #LFO2Lv
+Pan_? = #Pan_
+Level_? = #Level_

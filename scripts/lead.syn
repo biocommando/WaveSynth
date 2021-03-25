@@ -1,0 +1,79 @@
+' Little, ugly gnome VST synth script file
+' Copyrights 2016 by Joonas Salonpaa
+call init-all
+
+#dist = random * 0.6
+#dist = #dist * #dist
+#tail = 0.1 * random
+
+#fenv = random * 0.7
+#fenv = #fenv + 0.3
+for #index 1 to 3
+	Loop? = 1
+	Bank_? as_integer
+	Patch_? as_integer
+	Octave? as_integer
+	LFOShp? as_integer
+	Wavshp? = #dist
+	Tail.? = #tail
+	
+	E2Cut_? = #fenv
+	FCut_? = #fenv * 0.3
+	FCut_? = FCut_? + 0.3
+	FRes_? = #fenv
+	if FRes_? > 0.88
+		FRes_? = 0.88
+	endif
+loop
+
+#detune = 0.2 * random
+#detune = 0.05 + #detune
+Detune2 = 0.5 - #detune
+Detune3 = 0.5 + #detune
+#sust = 0.3 * random
+#sust = #sust + 0.3
+#sawlevel = 0.5 + random
+for #index 2 to 3
+	Patch_? = 1
+	Octave? = #index
+	Pan_? = Detune?
+	Decay? = #tail * 0.5
+	Sust.? = #sust
+	Level_? = #sawlevel
+loop
+
+
+Attack1 = random * Decay2
+
+#index = 1
+%is-melodic-selected as_integer
+%is-melodic-selected = 0
+while %is-melodic-selected = 0
+	Bank_? = random * 8
+	Patch_? = random * 8
+	call is-melodic-selected
+wend
+Octave1 = random * 2
+Octave1 = Octave1 + 2
+
+%delay-sync-length-quarters = 3
+call delay-sync
+DlyFeed = random * 0.3
+DlyFeed = DlyFeed + 0.2
+DlyWet = random * 0.3
+DlyWet = DlyWet + 0.3
+
+FlngFrq = random + 0.2
+FlngDly = random + 0.1
+FlngWet = random + 0.2
+FlngDpt = random * 0.25
+
+#maxiter = random * 3
+while #maxiter > 0
+	%unison-change = 2
+	%unison-change-multiplier = 1.5
+	call unison
+	#maxiter = #maxiter - 1
+wend
+#temp = random + 1
+UDetune = UDetune * #temp

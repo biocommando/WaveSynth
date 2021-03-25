@@ -1,0 +1,8 @@
+' Little, ugly gnome VST synth script file
+' Copyrights 2016 by Joonas Salonpaa
+#octave-index = 0
+for #index 1 to 3
+	get_selected_index Octave? total_count 7 to #octave-index
+	#octave-index = #octave-index + %transpose-octave-direction
+	set_selected_index #octave-index total_count 7 to Octave?
+loop

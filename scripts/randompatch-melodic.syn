@@ -1,0 +1,14 @@
+' Little, ugly gnome VST synth script file
+' Copyrights 2016 by Joonas Salonpaa
+
+for #index 1 to 3
+	%is-melodic-selected = 0
+	while %is-melodic-selected < 0.5
+		Bank_? as_integer
+		Patch_? as_integer
+		Bank_? = random * 8
+		Patch_? = random * 8
+		%is-melodic-selected = 1
+		call is-melodic-selected
+	wend
+loop

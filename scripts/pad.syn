@@ -1,0 +1,105 @@
+' Little, ugly gnome VST synth script file
+' Copyrights 2016 by Joonas Salonpaa
+' This code will create a pad sound
+' ********************************
+
+' create a spread-out feel with panning
+%width = random * 0.125
+%width = %width + 0.125
+%detune = random * 0.2
+%spread_mode = 1
+call spread
+#attack = random * 0.5
+#attack = #attack + 0.49
+' slow attack
+Attack1 = #attack
+Attack3 = #attack
+' the centered osc will be faster
+Attack2 = #attack * 0.5
+#LFORate = random * 0.3333
+for #index 1 to 3
+	Bank_? as_integer
+	Patch_? as_integer
+	%is-melodic-selected = 0
+	while %is-melodic-selected = 0
+		Bank_? = random * 7
+		Bank_? = Bank_? + 1
+		Patch_? = random * 8
+		call is-melodic-selected
+	wend
+	#CutOff = random * 0.65
+	FCut_? = #CutOff + 0.15
+	FRes_? = 1 - FCut_?
+	Wavshp? = random * FRes_?
+	Wavshp? = Wavshp? * 0.5
+	while Wavshp? < 0.1
+		Wavshp? = random
+	wend
+	E2Cut_? = random
+	LFOShp? = random
+	LFOFrq? = #LFORate * #index
+	LFO2Pt? = random * 0.08
+	LFO2Cu? = random * 0.1
+	LFO2Fl? = random * 0.5
+	LFO2Fl? = LFO2Fl? * LFO2Fl?
+	LFO2Lv? = random * 0.5
+	LFO2Lv? = LFO2Lv? * LFO2Lv?
+	CuePos? = random * 0.1
+	#OctaveSpread = random * 0.42
+	Octave? = #OctaveSpread + 0.29
+	Decay? = random * 0.5
+	Decay? = Decay? + 0.1
+	Sust.? = random * 0.3
+	Sust.? = Sustain? + 0.3
+	Tail.? = Attack? * 0.5
+	Level_? = 1
+	Loop? as_integer
+	Loop? = 2
+loop
+
+' *** global params ***
+
+' Unison
+Unison = random * 0.2
+Unison = Unison + 0.05
+#UDetune = Unison * random
+#UDetune = #UDetune * 0.5
+UDetune = Unison
+UDetune = UDetune + #UDetune
+' Levels
+Level = 0.5 - Unison
+SoftClp = Level
+
+' Delay
+DelayTm = random * 0.5
+DlyFeed = random * 0.5
+DlyWet = random * 0.5
+
+OscSeq = 0
+
+' Flanger
+FlngFrq = random * 0.7
+FlngFrq = FlngFrq + 0.3
+FlngDly = random * 0.9
+FlngDly = FlngDly + 0.1
+FlngWet = random * 0.8
+FlngWet = FlngWet + 0.2
+FlngDpt = random * 0.2
+FlngDpt = FlngDpt + 0.05
+
+' Modulation
+LfoFreq = random * 0.2
+LfoFreq = LfoFreq + 0.05
+LfoFreq = LfoFreq / 5
+LfoType as_integer
+LfoType = random * 2
+L2Pan = random
+L2Level = random * 0.2
+L2Delay = random * 0.5
+L2Flang = random * 0.5
+L2LFOs = random
+LowCut = 0
+L2Clip = random
+LStereo = random * 0.8
+LStereo = 0.2 + LStereo
+L2LFOs = random * 0.5
