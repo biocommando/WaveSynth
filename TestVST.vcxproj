@@ -1,0 +1,172 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{15CCCD80-ABF5-4A17-B477-0EA463A2E9E0}</ProjectGuid>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <Keyword>ManagedCProj</Keyword>
+    <RootNamespace>TestVST</RootNamespace>
+    <ProjectName>WaveSynth</ProjectName>
+    <WindowsTargetPlatformVersion>10.0.10586.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CLRSupport>false</CLRSupport>
+    <CharacterSet>NotSet</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CLRSupport>false</CLRSupport>
+    <CharacterSet>NotSet</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WINDOWS;_WINDOWS;WIN32;_USRDLL;_USE_MATH_DEFINES;USE_LIBPNG=1;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <AdditionalIncludeDirectories>D:\VST3 SDK\vstgui.sf\vstgui;D:\VST3 SDK;D:\VST3 SDK\pluginterfaces\vst2.x;D:\VST3 SDK\public.sdk\source\vst2.x;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>shell32.lib;msvcrtd.lib;ole32.lib;gdi32.lib;User32.lib;advapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>SereneVerb.def</ModuleDefinitionFile>
+      <IgnoreSpecificDefaultLibraries>libcmt.lib;libcmtd.lib;msvcrt.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WINDOWS;_WINDOWS;WIN32;_USRDLL;_USE_MATH_DEFINES;NDEBUG;ENABLE_VST_EXTENSION_IN_VSTGUI;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <AdditionalIncludeDirectories>D:\VST3 SDK\vstgui.sf\vstgui;D:\VST3 SDK;D:\VST3 SDK\pluginterfaces\vst2.x;D:\VST3 SDK\public.sdk\source\vst2.x;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
+      <EnableParallelCodeGeneration>true</EnableParallelCodeGeneration>
+      <FloatingPointModel>Fast</FloatingPointModel>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <AdditionalDependencies>shell32.lib;msvcrtd.lib;ole32.lib;gdi32.lib;User32.lib;advapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>WAVESYNTH.def</ModuleDefinitionFile>
+      <IgnoreSpecificDefaultLibraries>libcmt.lib;libcmtd.lib;msvcrt.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="BasicCompressor.h" />
+    <ClInclude Include="BasicDelay.h" />
+    <ClInclude Include="BasicFilter.h" />
+    <ClInclude Include="BasicOscillator.h" />
+    <ClInclude Include="PredictableRandom.h" />
+    <ClInclude Include="WavePlayer.h" />
+    <ClInclude Include="CChangeEvents.h" />
+    <ClInclude Include="EditorGui.h" />
+    <ClInclude Include="Flanger.h" />
+    <ClInclude Include="IniFileReader.h" />
+    <ClInclude Include="MacroCache.h" />
+    <ClInclude Include="MinimalParameter.h" />
+    <ClInclude Include="MS20Filter.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="Saturation.h" />
+    <ClInclude Include="Scripts.h" />
+    <ClInclude Include="strrpl.h" />
+    <ClInclude Include="WaveSynth.h" />
+    <ClInclude Include="WaveSynthConsts.h" />
+    <ClInclude Include="WaveSynthSettings.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="BasicCompressor.cpp" />
+    <ClCompile Include="BasicDelay.cpp" />
+    <ClCompile Include="BasicFilter.cpp" />
+    <ClCompile Include="BasicOscillator.cpp" />
+    <ClCompile Include="PredictableRandom.cpp" />
+    <ClCompile Include="WavePlayer.cpp" />
+    <ClCompile Include="CChangeEvents.cpp" />
+    <ClCompile Include="D:\VST3 SDK\public.sdk\source\vst2.x\audioeffect.cpp" />
+    <ClCompile Include="D:\VST3 SDK\public.sdk\source\vst2.x\audioeffectx.cpp" />
+    <ClCompile Include="D:\VST3 SDK\public.sdk\source\vst2.x\vstplugmain.cpp" />
+    <ClCompile Include="D:\VST3 SDK\vstgui.sf\vstgui\aeffguieditor.cpp" />
+    <ClCompile Include="D:\VST3 SDK\vstgui.sf\vstgui\vstcontrols.cpp" />
+    <ClCompile Include="D:\VST3 SDK\vstgui.sf\vstgui\vstgui.cpp" />
+    <ClCompile Include="EditorGui.cpp" />
+    <ClCompile Include="ExecuteScript.cpp" />
+    <ClCompile Include="Flanger.cpp" />
+    <ClCompile Include="IniFileReader.cpp" />
+    <ClCompile Include="MacroCache.cpp" />
+    <ClCompile Include="MinimalParameter.cpp" />
+    <ClCompile Include="MS20Filter.cpp" />
+    <ClCompile Include="Saturation.cpp" />
+    <ClCompile Include="strrpl.cpp" />
+    <ClCompile Include="WaveSynth.cpp">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">D:\VST3 SDK\pluginterfaces\vst2.x;D:\VST3 SDK\public.sdk\source\vst2.x;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <ClCompile Include="WaveSynthSettings.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="app.rc" />
+    <ResourceCompile Include="WaveSynth.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\..\..\..\..\..\Public\wavesynth\background-blank-small.bmp" />
+    <Image Include="..\..\..\..\..\..\Public\wavesynth\background-distort.bmp" />
+    <Image Include="..\..\..\..\..\..\Public\wavesynth\background-envelope.bmp" />
+    <Image Include="..\..\..\..\..\..\Public\wavesynth\background-filter.bmp" />
+    <Image Include="..\..\..\..\..\..\Public\wavesynth\background-level.bmp" />
+    <Image Include="..\..\..\..\..\..\Public\wavesynth\background-lfo.bmp" />
+    <Image Include="..\..\..\..\..\..\Public\wavesynth\background-modulation.bmp" />
+    <Image Include="..\..\..\..\..\..\Public\wavesynth\background-pan.bmp" />
+    <Image Include="..\..\..\..\..\..\Public\wavesynth\background-tuning.bmp" />
+    <Image Include="..\..\..\..\..\..\Public\wavesynth\background-wave.bmp" />
+    <Image Include="..\..\..\..\..\..\Public\wavesynth\background.bmp" />
+    <Image Include="..\..\..\..\..\..\Public\wavesynth\handle.bmp" />
+    <Image Include="app.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="WAVESYNTH.def" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
