@@ -1,0 +1,4 @@
+' Little, ugly gnome VST synth script file
+' Copyrights 2016 by Joonas Salonpaa
+
+randomSeed = random

@@ -1,0 +1,163 @@
+<head><title>Little, ugly gnome - readme</title></head>
+<body>
+<h2>Little, ugly gnome - 80s ROMpler inspired wavetable synthesizer</h2>
+&copy; 2017 Joonas Salonpää<br/>
+<img src="screenshot.png">
+<hr/>
+<h2>1 Menus for different macro edits</h2>
+The first menu is reserved for randomized patch generation. There are synth categories under that menu and when one of the items is selected, a synth sound according to that category is created.
+<br/><br/>
+The second menu is used for different utility tools for e.g. tempo syncing and easy sculpting of sound.
+<br/><br/>
+The last menu is for other macros such as copying synth engines from one into another.
+<h2>2 Display for selected ROM-samples for each synth engine.</h2>
+<h2>3.1 - 3.3 Individual synth engines</h2>
+<h4>Bank</h4>
+Select sample category.
+<h4>Patch</h4>
+Select sample.
+<h4>Looping</h4>
+Looping mode.
+<ul>
+<li>No
+<br/>
+- The sample will play once from start to end.
+</li>
+<li>Yes
+<br/>
+- The sample will play from start to the loop end point and then jump back to the loop start point.
+After the note is realeased the sample will play normally to the end.</li>
+<li>Release
+<br/>
+- The sample will play from start to the loop end point and then jump back to the loop start point.
+After the note is released the looping will continue but only the volume is decreased gradually.</li>
+</ul>
+<h4>Cue</h4>
+The loop position relative to the original looping position and the sample length.
+When cue is 0 the looping position is at the original position, when it is increased the looping position will
+shift further in time wrapping around in the end of the sample and finally ending up to the starting position at value 1.
+<h4>Octave</h4>
+Octave shift for the sample, range from -3 to 3.
+<h4>Detune</h4>
+Detune +-50 cents.
+<h4>Cutoff</h4>
+Cutoff frequency of the modeled MS20 low pass filter.
+<h4>Peaking</h4>
+Peaking/resonance amount.
+<h4>Distort<h4/>
+Hard clipping distortion amount. 0 is completely clean tone, 1 is clipping at around -30 dB level.
+<h4>Attack</h4>
+Envelope attack. Linear curve, range 0...4 seconds. By default envelope controls only the volume.
+<h4>Decay</h4>
+Envelope decay. Linear curve, range 0...4 seconds. By default envelope controls only the volume.
+<h4>Sustain</h4>
+Envelope sustain level. By default envelope controls only the volume.
+<h4>Tail</h4>
+<ul>
+<li>
+If looping mode is No or Yes tail is an exponentially decreasing multiplier applied to the volume
+after note release to make it possible to reduce the predefined release from the sample.
+</li><li>
+If looping mode is Release, tail is envelope release. Linear curve, range 0...4 seconds.
+</li>
+ By default envelope controls only the volume.
+</ul>
+<h4>E->Filter</h4>
+Send amount from envelope to filter cutoff.
+<h4>Type</h4>
+LFO waveform:
+<ul>
+<li>SINE = sine wave</li>
+<li>TRI = triangle wave</li>
+<li>SAW = sawtooth wave</li>
+<li>SQR = square wave</li>
+<li>SIN3 = sine wave to the power of 3</li>
+<li>S.SAW = smoothened (low pass filtered) sawtooth wave</li>
+<li>S.SQR = smoothened (low pass filtered) square wave</li>
+<li>NOISE = white noise</li>
+</ul>
+<h4>Rate</h4>
+LFO rate in Hz.
+<h4>L->Pitch</h4>
+Send amount from LFO to oscillator pitch.
+<h4>L->Cue</h4>
+Send amount from LFO to the loop position.
+<h4>L->Filter</h4>
+Send amount from LFO to filter cutoff.
+<h4>L->Level</h4>
+Send amount from LFO to volume.
+<h4>L->Pan</h4>
+Panning, +-100% where 0 is at center, -100 hard left and 100 hard right
+<h4>Level</h4>
+The volume. If volume is set to 0 the oscillator is disabled.
+
+<h2>4 Global controls</h2>
+
+<h4>Level</h4>
+Total volume of the synth.
+
+<h4>Unison</h4>
+Unison count.
+
+<h4>UDetune</h4>
+Unison detune in cents.
+
+<h4>DelayTm</h4>
+Delay time in milliseconds.
+
+<h4>DlyFeed</h4>
+Delay feedback amount.
+
+<h4>DlyWet</h4>
+Delay wet signal blend amount to dry signal.
+
+<h4>OscSeq</h4>
+Sequencing mode. "Layered" means that on note on all the synth engines play a note, in other modes only one of the synth engines play a note.
+
+<h4>SoftClp</h4>
+"Soft" clipping applied to the master signal.
+
+<h4>FlngFrq</h4>
+Flanger oscillator frequency in Hz.
+
+<h4>FlngDly</h4>
+Flanger delay amount.
+
+<h4>FlngDpt</h4>
+Flanger modulation depth.
+
+<h4>FlngWet</h4>
+Flanger wet signal blend amount to dry signal.
+
+<h4>LfoFreq</h4>
+Global LFO frequency.
+
+<h4>LfoType</h4>
+LFO waveform type. Same options as for synth engine specific LFO.
+
+<h4>L2Pan</h4>
+Send amount from LFO to panning.
+
+<h4>L2Level</h4>
+Send amount from LFO to synth output volume.
+
+<h4>L2Delay</h4>
+Send amount from LFO to delay wet signal blend amount.
+
+<h4>L2Flang</h4>
+Send amount from LFO to flanger wet signal blend amount.
+
+<h4>LowCut</h4>
+Highpass filter frequency.
+
+<h4>L2LFOs</h4>
+Send amount from LFO to synth engine specific LFOs.
+
+<h4>L2Clip</h4>
+Send amount from LFO to soft clip amount.
+
+<h4>LStereo</h4>
+Stereo offset for LFO (where applicable).
+
+</body>
+</html>

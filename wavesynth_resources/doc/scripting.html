@@ -1,0 +1,106 @@
+<html>
+<head>
+<title>Scripting</title>
+</head>
+<body>
+<h1>Scripting engine.</h1><hr/><br/>
+The plugin houses also a simple yet powerful scripting engine which allows you to create scripts that easen the use of the synth (in addition to the pre-existing scripts).<br/>
+Syntax reference:<br/>
+Commands consist of space separated lists of arguments. The following commands are supported:<br/><br/>
+<strong>Arithmetics and variable declaration</strong><br/><br/><br/>
+<em>[variable1] = [variable2 or constant] ([+ - / *] [variable3 or constant])</em><br/><br/>
+This sets the value of the equation to variable1. This is also the way to define variables. If variable is defined with prefix %, $ or # it is internal variable only for the use for the script. If the variable is not pre-fixed it means that the variable corresponds to some parameter in the synth. Maximum number of variables per script is 256 (including the 88 synth parameter variables and 1 index variable). <strong>Variable arrays</strong> can be created so that a value is set to the variable #index and a variable is post-fixed with a question mark. This will replace the question mark with the value of the variable #index.<br/><br/>
+<em>[variable] as_integer</em><br/><br/>
+Type of the variable is set to be a selection. This makes it easier to program selection lists, e.g. if variable Bank_1 is declared as integer setting Bank_1 = 3 will select the third sound bank regardless of the total number of banks. Note that this will only work for selection type of parameters (eg. waveforms, octave, LFO type) but not other types (eg. the behaviour of setting Detune to integer is undefined). Also note that this will not make the variable an integer, it will just scale the variable down to 0...1  range depending on the total amount of selection options.<br/><br/>
+<em>[variable] truncate</em><br/><br/>
+Variable is truncated to integer.<br/><br/>
+<strong>Program flow</strong><br/><br/><br/>
+<em>goto :[label]</em><br/><br/>
+Will seek to the position in the file that contains ":[label]".<br/><br/>
+<em>if [variable] [= < <= > >= <>]  [constant]</em><br/><br/>
+Does the defined test (note that the variable must exist and that the variable can only be compared to a constant). If the test doesn't succeed, the script will continue execution from the corresponding <strong>endif</strong> position. Else keyword is not supported yet.<br/><br/>
+<em>while [variable] [= < <= > >= <>]  [constant]</em><br/><br/>
+While the expression is true, a while loop will loop the section between while and <strong>wend</strong>. For nested loops you have to use the following syntax:<br/>
+@while [expression] [loop id]<br/>
+...<br/>
+@wend [loop id]<br/><br/>
+<em>for [variable] [constant from] to [constant to]</em><br/><br/>
+Same logic as in while loops (including the nested loop syntax), the terminating keyword is <strong>loop</strong>. Note that the variable must be defined before using it in a for loop. You don't have to explicitly define the #index variable, though.<br/><br/>
+<strong>Calling external scripts</strong><br/><br/><br/>
+<em>call [filename]</em><br/><br/>
+Executes a script from another file. The called script and current script will share the used variables but branching logics are separated. This means that e.g. the following script will execute without problems:<br/><br/>
+<u>script.txt:</u><br/><br/>
+<pre>
+#index = 0<br/>
+while #index < 3<br/>
+	call function.txt<br/>
+	#index = #index + 1<br/>
+wend<br/><br/>
+</pre>
+<u>function.txt:</u><br/><br/>
+<pre>
+FCut? = 0<br/>
+while FCut? < 0.5<br/>
+	FCut? = random<br/>
+wend<br/><br/>
+
+</pre>
+<br/>
+As an example the following script will randomize all the banks and patches:<br/>
+<pre>
+for #index 1 to 3<br/>
+	Bank_? as_integer<br/>
+	Patch_? as_integer<br/>
+	Bank_? = random * 8<br/>
+	Patch_? = random * 8<br/>
+loop<br/><br/>
+</pre>
+<br/>
+<strong>Comments</strong><br/><br/>
+Comment lines start with a single hyphen ('). There is a character limit for comment lines too so split extra long comments on multiple lines.<br/><br/>
+<strong>Invoking the scripts from the plugin</strong><br/><br/>
+Calling these created scripts happens from the macros menu. The macro definition file is a standard ini file where the macro order and macros are in separate segments in this way:
+<pre>
+# menu_1...3 correspond to the 3 dropdown menus
+[menu_1]
+# the text that is visible in the button that opens the menu
+title=Macros...
+# Menu items are defined as: #rownumber=segment name.
+# The plugin reads as many menu items as it can find in the correct order (e.g. if number 2 is missing, only items 0 and 1 will appear).
+# If the menu item is prefixed with $ it means that the script definition is found in another segment.
+0=$script without parameters
+# separator
+1=-
+2=$script with two parameters
+
+[$script without parameters]
+title=Text for the menu item
+script=script-file-name-without-.syn-postfix
+
+[$script with parameters]
+title=Text for the menu item
+script=script-file-name-without-.syn-postfix
+# parameters are defined in two steps:
+# first parameters are defined as: param[number]=variable-name
+# and then the parameter variable is assigned:
+# variable-name = value
+param0=%cutoff
+param1=%resonance
+%cutoff=0.5
+%resonance=0.25
+
+</pre>
+<strong>Naming conventions</strong><br/><br/>
+While it is not enforced, it is recommended that the following naming conventions are followed:<br/>
+<ul>
+<li>Prefix local variables with # and give them an unique name (e.g. prefix with script name, still remembering that 31 characters is max. variable length)<br/>
+	-> ex. #copy-destination</li>
+<li>Prefix function parameters and return values with %</li>
+<li>If creating callable script, use a local variable to store the original value of #index and set #index back to the original value before exiting the script<br/>
+	-> i.e.<br/>
+	#copy-temp-index = #index<br/>
+	...<br/><br/>
+	#index = #copy-temp-index</li>
+</ul>
+</body>
+</html>

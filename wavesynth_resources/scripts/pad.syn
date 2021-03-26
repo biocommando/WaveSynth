@@ -1,7 +1,5 @@
 ' Little, ugly gnome VST synth script file
-' Copyrights 2016 by Joonas Salonpaa
-' This code will create a pad sound
-' ********************************
+' Copyrights 2017 by Joonas Salonpaa
 
 ' create a spread-out feel with panning
 %width = random * 0.125
@@ -20,13 +18,15 @@ Attack2 = #attack * 0.5
 for #index 1 to 3
 	Bank_? as_integer
 	Patch_? as_integer
-	%is-melodic-selected = 0
-	while %is-melodic-selected = 0
-		Bank_? = random * 7
-		Bank_? = Bank_? + 1
-		Patch_? = random * 8
-		call is-melodic-selected
-	wend
+'	%is-melodic-selected = 0
+'	while %is-melodic-selected = 0
+'		Bank_? = random * 7
+'		Bank_? = Bank_? + 1
+'		Patch_? = random * 8
+'		call is-melodic-selected
+'	wend
+	Bank_? = random * 8
+	Patch_? = random * 8
 	#CutOff = random * 0.65
 	FCut_? = #CutOff + 0.15
 	FRes_? = 1 - FCut_?

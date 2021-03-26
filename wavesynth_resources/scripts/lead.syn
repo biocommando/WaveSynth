@@ -1,5 +1,5 @@
 ' Little, ugly gnome VST synth script file
-' Copyrights 2016 by Joonas Salonpaa
+' Copyrights 2017 by Joonas Salonpaa
 call init-all
 
 #dist = random * 0.6
@@ -34,7 +34,8 @@ Detune3 = 0.5 + #detune
 #sust = #sust + 0.3
 #sawlevel = 0.5 + random
 for #index 2 to 3
-	Patch_? = 1
+	Bank_? = 7
+	Patch_? = 2
 	Octave? = #index
 	Pan_? = Detune?
 	Decay? = #tail * 0.5
@@ -45,14 +46,15 @@ loop
 
 Attack1 = random * Decay2
 
-#index = 1
-%is-melodic-selected as_integer
-%is-melodic-selected = 0
-while %is-melodic-selected = 0
-	Bank_? = random * 8
-	Patch_? = random * 8
-	call is-melodic-selected
-wend
+'%is-melodic-selected as_integer
+'%is-melodic-selected = 0
+'while %is-melodic-selected = 0
+'	Bank_? = random * 8
+'	Patch_? = random * 8
+'	call is-melodic-selected
+'wend
+Bank_1 = random * 8
+Patch_1 = random * 8
 Octave1 = random * 2
 Octave1 = Octave1 + 2
 
