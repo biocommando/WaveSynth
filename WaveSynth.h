@@ -96,23 +96,23 @@ typedef struct{
 class WaveSynth : public AudioEffectX
 {
 private:
-	CChangeEvents *CChanges;
+	CChangeEvents *CChanges = NULL;
 	MinimalParameter *params[NUM_PARAMS];
 	WavePlayer *osc[NUM_PARAM_SETS];
 	BasicDelay *delay[2];
 	Flanger *flanger[2];
-	BasicOscillator *LFO;
-	PredictableRandom *predictableRandom;
+	BasicOscillator *LFO = NULL;
+	PredictableRandom *predictableRandom = NULL;
 	struct{
 		char name[8], patchNames[8][8];
 		char longName[40], longPatchNames[8][40];
 		int numPatches;
 	}	banks[8];
-	WaveSynthSettings *settings;
-	int numBanks, sequence, currentPack;
-	int transactionCount; // to avoid never ending loops
-	char *chunk, workDir[1024];
-	int randomSeed;
+	WaveSynthSettings *settings = NULL;
+	int numBanks = 0, sequence = 0, currentPack = 0;
+	int transactionCount = 0; // to avoid never ending loops
+	char *chunk = NULL, workDir[1024];
+	int randomSeed = 0;
 	void ReadSettings();
 	void ReadCCMappings();
 	void updateParams(int callerIndex = -1);

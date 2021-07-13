@@ -3,10 +3,8 @@
 #include <cstdlib>
 #include <cstring>
 
-MacroCache::MacroCache()
+MacroCache::MacroCache() : commandCache(NULL), titleCache(NULL)
 {
-	commandCache = NULL;
-	titleCache = NULL;
 }
 
 

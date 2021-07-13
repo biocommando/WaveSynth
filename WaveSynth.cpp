@@ -320,9 +320,9 @@ WaveSynth::~WaveSynth() {
 // all else: parameter data
 VstInt32 WaveSynth::getChunk(void** data, bool isPreset)
 {
-	if (chunk == NULL)
-		chunk = (char*)malloc(2 + sizeof(unsigned short));
 	unsigned int chunkSize = 2 + sizeof(unsigned short) + sizeof(unsigned int) + sizeof(int) + sizeof(int);
+	if (chunk == NULL)
+		chunk = (char*)malloc(chunkSize);
 	chunk[0] = 'v';
 	chunk[1] = 'i';
 	unsigned short version = CURRENT_VERSION;
