@@ -77,6 +77,7 @@
       <WholeProgramOptimization>true</WholeProgramOptimization>
       <EnableParallelCodeGeneration>true</EnableParallelCodeGeneration>
       <FloatingPointModel>Fast</FloatingPointModel>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>false</GenerateDebugInformation>
@@ -96,7 +97,9 @@
     <ClInclude Include="BasicDelay.h" />
     <ClInclude Include="BasicFilter.h" />
     <ClInclude Include="BasicOscillator.h" />
+    <ClInclude Include="ParamDto.h" />
     <ClInclude Include="PredictableRandom.h" />
+    <ClInclude Include="PresetLoader.h" />
     <ClInclude Include="WavePlayer.h" />
     <ClInclude Include="CChangeEvents.h" />
     <ClInclude Include="EditorGui.h" />
@@ -119,6 +122,7 @@
     <ClCompile Include="BasicFilter.cpp" />
     <ClCompile Include="BasicOscillator.cpp" />
     <ClCompile Include="PredictableRandom.cpp" />
+    <ClCompile Include="PresetLoader.cpp" />
     <ClCompile Include="WavePlayer.cpp" />
     <ClCompile Include="CChangeEvents.cpp" />
     <ClCompile Include="D:\VST3 SDK\public.sdk\source\vst2.x\audioeffect.cpp" />

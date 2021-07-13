@@ -6,12 +6,14 @@
 #include <stdio.h>
 #include <vector>
 #include "MacroCache.h"
+#include "PresetLoader.h"
 
-#define MENU_1_ID 1000
-#define MENU_2_ID 1001
-#define MENU_3_ID 1002
-#define NUM_OF_MENUS 3
-#define MACRO_COMMAND_LENGTH 500
+constexpr auto MENU_1_ID = 1000;
+constexpr auto MENU_2_ID = 1001;
+constexpr auto MENU_3_ID = 1002;
+constexpr auto PRESET_MENU_ID = 2000;
+constexpr auto NUM_OF_MENUS = 3;
+constexpr auto MACRO_COMMAND_LENGTH = 500;
 
 class MacroMenu : public COptionMenu {
 private:
@@ -33,9 +35,10 @@ class EditorGui : public AEffGUIEditor, public CControlListener
 private:
 	long lastTweakedTag;
 	void SetValueLabelText(int index);
-	void savePreset();
+	PresetLoader presetLoader;
 	bool checkBanks;
 	MacroMenu *menu[NUM_OF_MENUS];
+	COptionMenu *presetMenu;
 	MacroCache *menuCache[NUM_OF_MENUS];
 	unsigned int presetGroupNum, presetNum;
 	//void doMacroEdits(const char *command);
@@ -44,8 +47,6 @@ public:
 	EditorGui(void*);
 	~EditorGui();
 
-	void loadPresetNames();
-	void loadPreset();
 
 	// from AEffGUIEditor
 	bool open(void* ptr);

@@ -346,6 +346,21 @@ bool EditorGui::open(void* ptr)
 		fillMacroMenu(menu[i], menuCache[i], i + 1);
 		newFrame->addView(menu[i]);
 	}
+	r = CRect(0, wSize->bottom - valueLabels[0]->getHeight(), knobSize * 22 / 3, wSize->bottom);
+	presetMenu = new COptionMenu(r, this, PRESET_MENU_ID);
+	presetMenu->setBackColor(cFg);
+	presetMenu->setFrameColor(cBg);
+	presetMenu->setFontColor(cBg);
+	presetMenu->addEntry(new CMenuItem("Select preset...", 1 << 1));
+	presetMenu->addEntry(new CMenuItem("Save as new"));
+	presetLoader.readPresets();
+	auto presets = presetLoader.getPresets();
+	for (int i = 0; i < presets.size(); i++)
+	{
+		presetMenu->addEntry(new CMenuItem(presets[i].c_str()));
+	}
+	newFrame->addView(presetMenu);
+
 	/*r = CRect(0, 0, knobSize * 5 - 1, knobSize / 2 - 4);
 	menu[0] = new COptionMenu(r, this, MENU_1_ID);
 	menu[0]->setBackColor(cBg);
@@ -511,6 +526,34 @@ void EditorGui::valueChanged(CControl* pControl)
 		int menuIdx = tag - MENU_1_ID;
 		menu[menuIdx]->doMacroEdits(this, lastTweakedTag);
 		menu[menuIdx]->setCurrent(0);
+		return;
+	}
+	if (tag == PRESET_MENU_ID)
+	{
+		int presetIndex = presetMenu->getCurrentIndex() - 2;
+		if (presetIndex == -1)
+		{
+			std::vector<ParamDTO> dtos;
+			for (int i = 0; i < NUM_PARAMS; i++)
+			{
+				ParamDTO dto;
+				((WaveSynth*)effect)->getParameter(&dto, i);
+				dtos.push_back(dto);
+			}
+			auto newName = presetLoader.savePreset(dtos);
+			presetMenu->addEntry(new CMenuItem(newName.c_str()));
+		}
+		else
+		{
+			auto dtos = presetLoader.loadPreset(presetIndex);
+			for (int i = 0; i < dtos.size(); i++)
+			{
+				auto paramIdx = ((WaveSynth*)effect)->setParameter(&dtos[i]);
+				setParameter(paramIdx, effect->getParameter(paramIdx));
+				valueChanged(paramIdx);
+			}
+		}
+		presetMenu->setCurrent(0);
 		return;
 	}
 	//-- valueChanged is called whenever the user changes one of the controls in the User Interface (UI)
