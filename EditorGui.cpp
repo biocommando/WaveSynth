@@ -540,12 +540,15 @@ void EditorGui::valueChanged(CControl* pControl)
 				((WaveSynth*)effect)->getParameter(&dto, i);
 				dtos.push_back(dto);
 			}
-			auto newName = presetLoader.savePreset(dtos);
+			auto packIdx = ((WaveSynth*)effect)->getSelectedPack();
+			auto newName = presetLoader.savePreset(dtos, packIdx);
 			presetMenu->addEntry(new CMenuItem(newName.c_str()));
 		}
 		else
 		{
-			auto dtos = presetLoader.loadPreset(presetIndex);
+			int packIdx = 0;
+			auto dtos = presetLoader.loadPreset(presetIndex, &packIdx);
+			((WaveSynth*)effect)->setSelectedPack(packIdx);
 			for (int i = 0; i < dtos.size(); i++)
 			{
 				auto paramIdx = ((WaveSynth*)effect)->setParameter(&dtos[i]);

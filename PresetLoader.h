@@ -9,8 +9,8 @@ class PresetLoader
 public:
 	void readPresets();
 	std::vector<std::string> getPresets() { return presets; }
-	std::vector<ParamDTO> loadPreset(int presetIndex);
-	std::string savePreset(std::vector<ParamDTO> params);
+	std::vector<ParamDTO> loadPreset(int presetIndex, int *wavePack);
+	std::string savePreset(std::vector<ParamDTO> params, int wavePack);
 	PresetLoader();
 	~PresetLoader();
 };

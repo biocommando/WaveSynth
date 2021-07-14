@@ -1,4 +1,5 @@
 #include "PresetLoader.h"
+#include "WaveSynthConsts.h"
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
@@ -13,7 +14,7 @@ std::string getPresetFilename()
 	return std::string(filename);
 }
 
-std::vector<ParamDTO> PresetLoader::loadPreset(int presetIndex)
+std::vector<ParamDTO> PresetLoader::loadPreset(int presetIndex, int *wavePack)
 {
 	std::vector<ParamDTO> res;
 
@@ -29,7 +30,11 @@ std::vector<ParamDTO> PresetLoader::loadPreset(int presetIndex)
 		idx++;
 		if (idx == presetIndex)
 		{
-			for (int i = 0; i < 88; i++)
+			std::getline(f, s);
+			*wavePack = std::stoi(s);
+			std::getline(f, s);
+			auto numParams = std::stoi(s);
+			for (int i = 0; i < numParams; i++)
 			{
 				std::getline(f, s);
 				ParamDTO dto;
@@ -42,7 +47,7 @@ std::vector<ParamDTO> PresetLoader::loadPreset(int presetIndex)
 	return res;
 }
 
-std::string PresetLoader::savePreset(std::vector<ParamDTO> params)
+std::string PresetLoader::savePreset(std::vector<ParamDTO> params, int wavePack)
 {
 	std::ofstream f;
 	f.open(getPresetFilename(), std::ios_base::app | std::ios_base::out);
@@ -50,6 +55,8 @@ std::string PresetLoader::savePreset(std::vector<ParamDTO> params)
 	std::string presetName = "Preset #" + std::to_string(idx);
 	presets.push_back(presetName);
 	f << "$" << presetName << std::endl;
+	f << std::to_string(wavePack) << std::endl;
+	f << std::to_string(params.size()) << std::endl;
 	for (unsigned i = 0; i < params.size(); i++)
 	{
 		char str[100];

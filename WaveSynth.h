@@ -43,7 +43,6 @@ private:
 	void ChangePatch(WavePlayer *osc, MinimalParameter *pBank, MinimalParameter *pPatch);
 	void ReplaceStr(char *str, char replaceWhat, char replacement);
 	void setWaveFileOffset(FILE *waves, int bank, int patch);
-	void setSelectedPack(int packIndex);
 public:
 	WaveSynth(audioMasterCallback audioMaster);
 	~WaveSynth();
@@ -65,6 +64,8 @@ public:
 	void endTransaction();
 	bool isTransactionOver();
 	FILE *getMacroDefinitionFile();
+	void setSelectedPack(int packIndex);
+	int getSelectedPack() { return settings->getSelectedPackIndex(); }
 
 	VstInt32 getChunk(void** data, bool isPreset);
 	VstInt32 setChunk(void* data, VstInt32 byteSize, bool isPreset);
