@@ -454,7 +454,7 @@ void MacroMenu::doMacroEdits(AEffGUIEditor *editor, long lastTweakedTag)
 		char *initial = (char*)malloc(1);
 		initial[0] = 0;
 		int initial_sz = 1;
-		for (int i = 0; i < NUM_PARAMS + 3; i++)
+		for (int i = 0; i < NUM_PARAMS + 4; i++)
 		{
 			char s[100], name[100];
 			float value;
@@ -479,8 +479,13 @@ void MacroMenu::doMacroEdits(AEffGUIEditor *editor, long lastTweakedTag)
 				strcpy(name, "randomSeed");
 				value = -1;
 			}
+			else if (i == NUM_PARAMS + 2)
+			{
+				strcpy(name, "wavePackIndexReadOnly");
+				value = ((WaveSynth*)effect)->getSelectedPack();
+			}
 			
-			if (i == NUM_PARAMS + 2)
+			if (i == NUM_PARAMS + 3)
 				sprintf(s, "%s", otherScriptVariables);
 			else
 			{

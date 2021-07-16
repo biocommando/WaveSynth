@@ -6,21 +6,16 @@ extern void WriteLog(char*, double = 0);
 
 int GetSelection(double value, int displayCount)
 {
-	//WriteLog("GetSelection", value);
-	//WriteLog("GetSelection=", (double)((int)(value * 0.99 * displayCount)));
 	return (int)(value * 0.99 * displayCount);
 }
 
 
 double SetSelection(int index, int displayCount)
 {
-	//WriteLog("SetSelection", index);
 	if (displayCount == 0) return 0;
 	double value = (double)(index + 0.5) / displayCount;
 	if (value > 1) value = 1;
 	else if (value < 0) value = 0;
-	//WriteLog("SetSelection=", value);
-	//WriteLog("Calling get selection for confirmation", 0);
 	GetSelection(value, displayCount);
 	return value;
 }
@@ -96,8 +91,31 @@ int _ExecuteScript(char *filename, ScriptVariable *variables, int usedVariables 
 			fseek(script, whileLoopPos[0], SEEK_SET);
 		else if (numCmds == 1 && !strcmp(cmd[0], "loop"))
 			fseek(script, forLoopPos[0], SEEK_SET);
+		else if (numCmds == 1 && !strcmp(cmd[0], "else"))
+		{
+			int ifLevel = 1;
+			while (!feof(script) && ifLevel > 0)
+			{
+				char buf[256], cmd1[32] = "";
+				fgets(buf, 256, script);
+				sscanf(buf, "%s", cmd1);
+				if (!strcmp(cmd1, "if"))
+					ifLevel++;
+				else if (!strcmp(cmd1, "endif"))
+					ifLevel--;
+			}
+		}
 		if (numCmds <= 1) continue;
-		if (!strcmp(cmd[0], "call"))
+		if (!strcmp(cmd[0], "debug"))
+		{
+			auto var = getScriptVariable(cmd[1], variables, usedVariables);
+			WriteLog(var->name, var->value);
+		}
+		else if (!strcmp(cmd[0], "debugmsg"))
+		{
+			WriteLog(full_cmd);
+		}
+		else if (!strcmp(cmd[0], "call"))
 		{
 			int pos = strlen(filename);
 			while (filename[--pos] != '\\');
@@ -207,20 +225,6 @@ int _ExecuteScript(char *filename, ScriptVariable *variables, int usedVariables 
 						ifResult = variableCompare(&variables[i], compareTo, 0, 1, 1);
 					else if (!strcmp(cmd[2], "<>"))
 						ifResult = variableCompare(&variables[i], compareTo, 0, 1, 1);
-					/*if (!strcmp(cmd[2], ">"))
-						ifResult = variables[i].value > compareTo;
-					else if (!strcmp(cmd[2], "<"))
-						ifResult = variables[i].value < compareTo;
-					else if (!strcmp(cmd[2], ">="))
-						ifResult = variables[i].value >= compareTo;
-					else if (!strcmp(cmd[2], "<="))
-						ifResult = variables[i].value <= compareTo;
-					else if (!strcmp(cmd[2], "="))
-						ifResult = variables[i].value == compareTo;
-					else if (!strcmp(cmd[2], "!="))
-						ifResult = variables[i].value != compareTo;
-					else if (!strcmp(cmd[2], "<>"))
-						ifResult = variables[i].value != compareTo;*/
 				}
 			if (!strcmp(cmd[0], "while") || !strcmp(cmd[0], "@while"))
 			{
@@ -242,7 +246,7 @@ int _ExecuteScript(char *filename, ScriptVariable *variables, int usedVariables 
 				int ifLevel = 1;
 				while (!feof(script) && ifLevel > 0)
 				{
-					char buf[256], cmd1[32];
+					char buf[256], cmd1[32] = "";
 					fgets(buf, 256, script);
 					sscanf(buf, "%s", cmd1);
 					if (!strcmp(cmd1, "if"))
@@ -397,7 +401,6 @@ unsigned int ExecuteScript(char *filename, char **dtoStream, char *initial)
 			buf[bpos] = 0;
 			sscanf(buf, "%lf", &variables[usedVariables].value);
 			variables[usedVariables].type = TYPE_VST_FLOAT_PARAM;
-			//WriteLog(variables[usedVariables].name, variables[usedVariables].value);
 			bpos = 0;
 		}
 		else if (*ptr == '<')
