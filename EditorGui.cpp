@@ -22,61 +22,34 @@ EditorGui::EditorGui(void* ptr)
 	presetNum = 0;
 	presetGroupNum = 0;
 	lastTweakedTag = -1;
-	for (int i = 0; i < NUM_OF_MENUS; i++)
-	{
-		menuCache[i] = new MacroCache();
-	}
 }
 
 EditorGui::~EditorGui()
 {
-	for (int i = 0; i < NUM_OF_MENUS; i++)
-	{
-		delete menuCache[i];
-	}
 }
 
 MacroMenu::MacroMenu(const CRect &size, CControlListener *listener, long tag)
 	: COptionMenu(size, listener, tag)
 {
-	macroCount = 0;
-	macroCommands = (char *)malloc(sizeof(char));
 }
 
 MacroMenu::~MacroMenu()
 {
-	free(macroCommands);
 }
-
-void MacroMenu::addEntry(const char *entry, bool hasMacro)
+void MacroMenu::addEntry(const std::string& title)
 {
-	if (!hasMacro)
+	COptionMenu::addEntry(title.c_str());
+}
+void MacroMenu::addEntry(MacroCommand entry)
+{
+	/*if (!hasMacro)
 	{
-		COptionMenu::addEntry(entry);
+		COptionMenu::addEntry(entry.title);
 		return;
-	}
-	macroCount++;
-	macroCommands = (char*)realloc(macroCommands, MACRO_COMMAND_LENGTH * macroCount);
-	char *macroText = (char*)malloc(strlen(entry) + 1);
-	strcpy(macroText, entry);
-	int macroCommandBegin = 0;
-	for (int i = 0; i < 100 && macroText[i] != 0; i++)
-	{
-		if (macroText[i] == ';')
-		{
-			macroText[i] = 0;
-			macroCommandBegin = i + 1;
-		}
-	}
-	int macroCmdIdx = MACRO_COMMAND_LENGTH * (macroCount - 1);
-	for (int i = 0; i < MACRO_COMMAND_LENGTH && macroText[macroCommandBegin + i] != 0; i++)
-	{
-		macroCommands[macroCmdIdx] = macroText[macroCommandBegin + i];
-		macroCmdIdx++;
-	}
-	macroCommands[macroCmdIdx] = 0;
-	COptionMenu::addEntry(macroText);
-	free(macroText);
+	}*/
+	entry.idx = getNbEntries();
+	macroCommands.push_back(entry);
+	COptionMenu::addEntry(entry.title.c_str());
 }
 
 void EditorGui::SetValueLabelText(int index)
@@ -92,138 +65,71 @@ void EditorGui::SetValueLabelText(int index)
 	valueLabels[index]->setText(text);
 }
 
-void MacroMenu::saveToCache(MacroCache *cache)
+void EditorGui::fillMacroMenu(MacroMenu *menu, int tag)
 {
-	long entries = getNbEntries();
-	char *titleCache = (char *)malloc(1);
-	*titleCache = 0;
-	long titleCacheSize = 1;
-	for (long i = 0; i < entries; i++) 
-	{
-		char title[256];
-		strcpy(title, getEntry(i)->getTitle());
-		long titleLen = strlen(title);
-		titleCacheSize += titleLen + 1;
-		titleCache = (char *)realloc(titleCache, titleCacheSize);
-		if (*titleCache)
+	IniFileReader reader;
+	reader.openFile(((WaveSynth*)effect)->getMacroDefinitionFile());
+	char menuTag[32];
+	sprintf(menuTag, "menu_%d", tag);
+	char macroText[MACRO_COMMAND_LENGTH * 2] = "1";
+	reader.readCharValue(menuTag, "title", macroText);
+	menu->addEntry(macroText);
+	for (int keyIdx = 0; macroText[0] != 0; keyIdx++) {
+		macroText[0] = 0;
+		reader.readCharValueWithIndex(menuTag, "", keyIdx, macroText);
+		if (macroText[0] == 0) break;
+		if (macroText[0] == '-')
 		{
-			sprintf(titleCache, "%s%s;", titleCache, title);
+			menu->addSeparator();
 		}
-		else 
+		else if (macroText[0] == '$')
 		{
-			sprintf(titleCache, "%s;", title);
-		}
-	}
-	cache->setCache(macroCommands, macroCount * MACRO_COMMAND_LENGTH, titleCache, titleCacheSize);
-	free(titleCache);
-}
-
-void MacroMenu::loadFromCache(MacroCache *cache)
-{
-	char *titles = (char*)malloc(1);
-	long commandSize = cache->getCache(&macroCommands, &titles);
-	macroCount = commandSize / MACRO_COMMAND_LENGTH;
-	char *p = titles;
-	char *start = NULL;
-	while (*p) 
-	{
-		if (start == NULL)
-		{
-			start = p;
-		}
-		if (*p == ';')
-		{
-			*p = 0;
-			if (*start == 0)
+			MacroCommand macro;
+			char macroTitle[100];
+			char macroScript[MACRO_COMMAND_LENGTH] = "";
+			char segment[100];
+			strcpy(segment, macroText);
+			reader.readCharValue(segment, "title", macroTitle);
+			macro.title = macroTitle;
+			reader.readCharValue(segment, "script", macroScript);
+			if (macroScript[0] == 0)
 			{
-				addSeparator();
-			} 
+				macro.script = "internal:lastTweakToAll";
+			}
 			else
 			{
-				addEntry(start, false);
+				macro.script = macroScript;
 			}
-			start = NULL;
-		}
-		p++;
-	}
-	free(titles);
-}
-
-void EditorGui::fillMacroMenu(MacroMenu *menu, MacroCache *cache, int tag)
-{
-	if (!cache->isCached())
-	{
-		IniFileReader *reader = new IniFileReader();
-		reader->openFile(((WaveSynth*)effect)->getMacroDefinitionFile());
-		char menuTag[32];
-		sprintf(menuTag, "menu_%d", tag);
-		char macroText[MACRO_COMMAND_LENGTH * 2] = "1";
-		reader->readCharValue(menuTag, "title", macroText);
-		menu->addEntry(macroText, false);
-		for (int keyIdx = 0; macroText[0] != 0; keyIdx++) {
-			macroText[0] = 0;
-			reader->readCharValueWithIndex(menuTag, "", keyIdx, macroText);
-			if (macroText[0] == 0) break;
-			if (macroText[0] == '-')
+			int paramIdx = 0;
+			while(1)
 			{
-				menu->addSeparator();
-			}
-			else if (macroText[0] == '$')
-			{
-				char macroTitle[100];
-				char macroScript[MACRO_COMMAND_LENGTH] = "";
-				char segment[100];
-				strcpy(segment, macroText);
-				reader->readCharValue(segment, "title", macroTitle);
-				reader->readCharValue(segment, "script", macroScript);
-				if (macroScript[0] == 0)
+				char variable[32] = "";
+				char value[32] = "";
+				reader.readCharValueWithIndex(segment, "param", paramIdx, variable);
+				if (!variable[0])
 				{
-					sprintf(macroText, "%s;last", macroTitle);
+					break;
+				}
+				reader.readCharValue(segment, variable, value);
+				if (!value[0])
+				{
+					break;
 				}
 				else
 				{
-					sprintf(macroText, "%s;script %s", macroTitle, macroScript);
+					MacroCommandParam p = { variable, std::stod(value) };
+					macro.params.push_back(p);
+					paramIdx++;
 				}
-				int paramIdx = 0;
-				while(1)
-				{
-					char variable[32] = "";
-					char value[32] = "";
-					reader->readCharValueWithIndex(segment, "param", paramIdx, variable);
-					if (!variable[0])
-					{
-						break;
-					}
-					reader->readCharValue(segment, variable, value);
-					if (!value[0])
-					{
-						break;
-					}
-					else
-					{
-						if (paramIdx == 0)
-							strcat(macroText, " ");
-						char paramStr[100];
-						sprintf(paramStr, "%s>%s>", variable, value);
-						strcat(macroText, paramStr);
-						paramIdx++;
-					}
-				}
-				menu->addEntry(macroText);
 			}
-			else
-			{
-				menu->addEntry(macroText);
-			}
+			menu->addEntry(macro);
 		}
-		menu->saveToCache(cache);
-		reader->closeFile();
-		delete reader;
+		else
+		{
+			menu->addEntry(macroText);
+		}
 	}
-	else
-	{
-		menu->loadFromCache(cache);
-	}
+	reader.closeFile();
 }
 
 //------------------------------------------------------------------------------------
@@ -343,7 +249,7 @@ bool EditorGui::open(void* ptr)
 		menu[i]->setBackColor(cBg);
 		menu[i]->setFrameColor(cFg);
 		menu[i]->setFontColor(cFg);
-		fillMacroMenu(menu[i], menuCache[i], i + 1);
+		fillMacroMenu(menu[i], i + 1);
 		newFrame->addView(menu[i]);
 	}
 	r = CRect(0, wSize->bottom - valueLabels[0]->getHeight(), knobSize * 22 / 3, wSize->bottom);
@@ -360,29 +266,6 @@ bool EditorGui::open(void* ptr)
 		presetMenu->addEntry(new CMenuItem(presets[i].c_str()));
 	}
 	newFrame->addView(presetMenu);
-
-	/*r = CRect(0, 0, knobSize * 5 - 1, knobSize / 2 - 4);
-	menu[0] = new COptionMenu(r, this, MENU_1_ID);
-	menu[0]->setBackColor(cBg);
-	menu[0]->setFrameColor(cFg);
-	menu[0]->setFontColor(cFg);
-	newFrame->addView(menu[0]);
-	r = CRect(knobSize*5, 0, knobSize * 15 - 1, knobSize / 2 - 4);
-	menu[1] = new COptionMenu(r, this, MENU_2_ID);
-	menu[1]->setBackColor(cBg);
-	menu[1]->setFrameColor(cFg);
-	menu[1]->setFontColor(cFg);
-	loadPresetNames();
-	newFrame->addView(menu[1]);
-	r = CRect(knobSize * 15, 0, knobSize * 22, knobSize / 2 - 4);
-	menu[2] = new COptionMenu(r, this, MENU_3_ID);
-	menu[2]->setBackColor(cBg);
-	menu[2]->setFrameColor(cFg);
-	menu[2]->setFontColor(cFg);*/
-	/*
-	macroCommands = (char*)malloc(1);
-	fillMacroMenu(menu[2], 1, 0);
-	newFrame->addView(menu[2]);*/
 
 	//-- forget the bitmaps
 	for (int i = 0; i < 10; i++)
@@ -414,7 +297,6 @@ void EditorGui::close()
 	CFrame* oldFrame = frame;
 	frame = 0;
 	delete oldFrame;
-	//free(macroCommands);
 }
 
 std::vector<std::string> splitString(const std::string& s, char c)
@@ -433,15 +315,28 @@ std::vector<std::string> splitString(const std::string& s, char c)
 	return ret;
 }
 
+MacroCommand* MacroMenu::getCurrentCommand()
+{
+	for (int i = 0; i < macroCommands.size(); i++)
+	{
+		if (macroCommands[i].idx == getCurrentIndex(true))
+		{
+			return &macroCommands[i];
+		}
+	}
+	return nullptr;
+}
+
 void MacroMenu::doMacroEdits(AEffGUIEditor *editor, long lastTweakedTag)
 {
-	if (getCurrentIndex() <= 0) return;
-	char cmd[20] = "", scriptName[200] = "", otherScriptVariables[200] = "";
-	char *command = &macroCommands[MACRO_COMMAND_LENGTH * (getCurrentIndex() - 1)];
-	int numCmd = sscanf(command, "%s %s %s", cmd, scriptName, otherScriptVariables);
+	auto cmd = getCurrentCommand();
+	if (cmd == nullptr)
+	{
+		return;
+	}
 	AudioEffect *effect = editor->getEffect();
 
-	if (!strcmp(cmd, "last") && lastTweakedTag >= 0)
+	if (cmd->script == "internal:lastTweakedToAll" && lastTweakedTag >= 0)
 	{
 		int paramSet, paramId = -1;
 		float paramValue = ((WaveSynth*)effect)->getParameter(lastTweakedTag);
@@ -459,13 +354,12 @@ void MacroMenu::doMacroEdits(AEffGUIEditor *editor, long lastTweakedTag)
 			}
 		}
 	}
-	else if (!strcmp(cmd, "script"))
+	else
 	{
 		extern void getWorkDir(char*);
 		char filename[1024];
 		getWorkDir(filename);
-		sprintf(filename, "%sscripts\\%s.syn", filename, scriptName);
-		char *mem = NULL;
+		sprintf(filename, "%sscripts\\%s.syn", filename, cmd->script.c_str());
 		std::vector<ScriptVariable> initial;
 		for (int i = 0; i < NUM_PARAMS + 4; i++)
 		{
@@ -502,10 +396,11 @@ void MacroMenu::doMacroEdits(AEffGUIEditor *editor, long lastTweakedTag)
 			
 			if (i == NUM_PARAMS + 3)
 			{
-				auto vars = splitString(otherScriptVariables, '>');
-				for (int i = 0; i < vars.size(); i += 2)
+				//auto vars = splitString(otherScriptVariables, '>');
+				for (int i = 0; i < cmd->params.size(); i++)
 				{
-					ScriptVariable var = { TYPE_TEMPORARY, vars[i], std::stod(vars[i + 1]) };
+					auto param = &cmd->params[i];
+					ScriptVariable var = { TYPE_TEMPORARY, param->name, param->value };
 					initial.push_back(var);
 				}
 			}
@@ -516,13 +411,10 @@ void MacroMenu::doMacroEdits(AEffGUIEditor *editor, long lastTweakedTag)
 			}
 		}
 		auto dtos = ExecuteScript(filename, initial);
-		WriteLog("Execute script done, handling dtos", dtos.size());
 
 		for (int i = 0; i < dtos.size(); i++)
 		{
-			WriteLog("Hanlding dto", i);
 			auto dto = &dtos[i];
-			WriteLog(dto->id, dto->floatValue);
 			int index = ((WaveSynth*)effect)->setParameter(dto);
 			if (index > -1)
 			{
@@ -530,7 +422,6 @@ void MacroMenu::doMacroEdits(AEffGUIEditor *editor, long lastTweakedTag)
 				((EditorGui*)editor)->valueChanged(index);
 			}
 		}
-		free(mem);
 	}
 }
 

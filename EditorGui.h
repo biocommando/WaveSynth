@@ -4,6 +4,7 @@
 #include "WaveSynthConsts.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <string>
 #include <vector>
 #include "MacroCache.h"
 #include "PresetLoader.h"
@@ -15,16 +16,30 @@ constexpr auto PRESET_MENU_ID = 2000;
 constexpr auto NUM_OF_MENUS = 3;
 constexpr auto MACRO_COMMAND_LENGTH = 500;
 
+struct MacroCommandParam
+{
+	std::string name;
+	double value;
+};
+
+struct MacroCommand
+{
+	std::string title;
+	std::string script;
+	std::vector<struct MacroCommandParam> params;
+	int idx;
+};
+
 class MacroMenu : public COptionMenu {
-private:
-	char *macroCommands;
-	long macroCount;
 public:
+	std::vector<MacroCommand> macroCommands;
 	//CMenuItem* addEntry(const char *entry, long index = -1L, long itemFlags = 0L) override;
-	void addEntry(const char *entry, bool hasMacro = true);
+	void addEntry(MacroCommand entry);
+	void addEntry(const std::string& title);
 	void doMacroEdits(AEffGUIEditor *editor, long lastTweakedTag);
-	void saveToCache(MacroCache *cache);
-	void loadFromCache(MacroCache *cache);
+	MacroCommand* getCurrentCommand();
+	/*void saveToCache(MacroCache *cache);
+	void loadFromCache(MacroCache *cache);*/
 
 	MacroMenu(const CRect &size, CControlListener *listener, long tag);
 	~MacroMenu();
@@ -39,10 +54,11 @@ private:
 	bool checkBanks;
 	MacroMenu *menu[NUM_OF_MENUS];
 	COptionMenu *presetMenu;
-	MacroCache *menuCache[NUM_OF_MENUS];
+	/*MacroCache *menuCache[NUM_OF_MENUS];
+	bool macroMenuCached = false;*/
 	unsigned int presetGroupNum, presetNum;
 	//void doMacroEdits(const char *command);
-	void fillMacroMenu(MacroMenu *menu, MacroCache *cache, int tag);
+	void fillMacroMenu(MacroMenu *menu, int tag);
 public:
 	EditorGui(void*);
 	~EditorGui();
