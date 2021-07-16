@@ -3,7 +3,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
-extern void WriteLog(char* msg, double val = 0);
+extern void WriteLog(const char* msg, double val = 0);
 std::string getPresetFilename()
 {
 	extern void getWorkDir(char*);

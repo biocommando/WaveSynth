@@ -2,7 +2,16 @@
 #include "WaveSynth.h"
 #include "strrpl.h"
 
-extern void WriteLog(char*, double = 0);
+extern void WriteLog(const char*, double = 0);
+
+ScriptVariable createVariable(const std::string& name, double value = 0.0, char type = TYPE_TEMPORARY)
+{
+	return {
+		type,
+		name, 
+		value
+	};
+}
 
 int GetSelection(double value, int displayCount)
 {
@@ -24,7 +33,7 @@ void readUntil(FILE *script, char *what, int id = 0)
 {
 	while (!feof(script))
 	{
-		char buf[256], cmd1[32];
+		char buf[256], cmd1[32] = "";
 		int readId;
 		fgets(buf, 256, script);
 		sscanf(buf, "%s %d", cmd1, &readId);
@@ -55,29 +64,33 @@ int variableCompare(ScriptVariable *variable, double value, char greaterTest, ch
 	return result;
 }
 
-ScriptVariable *getScriptVariable(char * variableName, ScriptVariable *variables, int usedVariables)
+ScriptVariable *getScriptVariable(const std::string &variableName, std::vector<ScriptVariable> &variables)
 {
 	ScriptVariable *var = NULL;
-	for (int i = 0; i <= usedVariables; i++)
-		if (!strcmp(variables[i].name, variableName))
+	for (int i = 0; i < variables.size(); i++)
+	{
+		if (variables[i].name == variableName)
 		{
 			var = &variables[i];
 			break;
 		}
+	}
 	return var;
 }
 
-int _ExecuteScript(char *filename, ScriptVariable *variables, int usedVariables = 0)
+void _ExecuteScript(const std::string &filename, std::vector<ScriptVariable> &variables)
 {
-	FILE *script = fopen(filename, "r");
+	FILE *script = fopen(filename.c_str(), "r");
 	int execTime = (int)time(NULL);
 	long whileLoopPos[100], forLoopPos[100];
 	for (int i = 0; i < 100; i++) whileLoopPos[i] = forLoopPos[i] = -1;
+	bool enableDebug = false;
 	while (!feof(script) && (int)time(NULL) - execTime < 5) // endless loop protection
 	{
 		char full_cmd[256];
 		long cmdPos = ftell(script);
 		fgets(full_cmd, 256, script);
+		if (enableDebug) WriteLog(full_cmd);
 		if (feof(script)) break;
 		char numAsStr[10];
 		sprintf(numAsStr, "%d", (int)variables[0].value);
@@ -108,30 +121,31 @@ int _ExecuteScript(char *filename, ScriptVariable *variables, int usedVariables 
 		if (numCmds <= 1) continue;
 		if (!strcmp(cmd[0], "debug"))
 		{
-			auto var = getScriptVariable(cmd[1], variables, usedVariables);
-			WriteLog(var->name, var->value);
+			auto var = getScriptVariable(cmd[1], variables);
+			WriteLog(var->name.c_str(), var->value);
 		}
 		else if (!strcmp(cmd[0], "debugmsg"))
 		{
 			WriteLog(full_cmd);
+			if (!strcmp(cmd[1], "enable_all"))
+			{
+				enableDebug = true;
+				WriteLog("-- Debug output enabled");
+			}
 		}
 		else if (!strcmp(cmd[0], "call"))
 		{
-			int pos = strlen(filename);
-			while (filename[--pos] != '\\');
-			char filename2[1024] = "";
-			strncpy(filename2, filename, pos + 1);
-			strcat(filename2, cmd[1]);
-			int hasExtension = 0;
-			for (char *p = filename2; *p && !hasExtension; p++) hasExtension = *p == '.';
-			if (!hasExtension)
-				strcat(filename2, ".syn");
-			usedVariables = _ExecuteScript(filename2, variables, usedVariables);
+			int pos = filename.find_last_of('\\');
+			std::string ext = "";
+			if (std::string(cmd[1]).find_first_of('.') == std::string::npos)
+				ext = ".syn";
+			auto filename2 = filename.substr(0, pos + 1) + cmd[1] + ext;
+			_ExecuteScript(filename2, variables);
 		}
 		// get_selected_index #variable total_count value to #result
 		else if (!strcmp(cmd[0], "get_selected_index"))
 		{
-			ScriptVariable *var = getScriptVariable(cmd[1], variables, usedVariables);
+			ScriptVariable *var = getScriptVariable(cmd[1], variables);
 			double value;
 			if (var == 0)
 				sscanf(cmd[1], "%lf", &value);
@@ -139,13 +153,13 @@ int _ExecuteScript(char *filename, ScriptVariable *variables, int usedVariables 
 				value = var->value;
 			int count = 0;
 			sscanf(cmd[3], "%d", &count);
-			var = getScriptVariable(cmd[5], variables, usedVariables);
+			var = getScriptVariable(cmd[5], variables);
 			var->value = GetSelection(value, count);
 		}
 		// set_selected_index #index total_count value to #result
 		else if (!strcmp(cmd[0], "set_selected_index"))
 		{
-			ScriptVariable *var = getScriptVariable(cmd[1], variables, usedVariables);
+			ScriptVariable *var = getScriptVariable(cmd[1], variables);
 			double value;
 			if (var == 0)
 				sscanf(cmd[1], "%lf", &value);
@@ -153,7 +167,7 @@ int _ExecuteScript(char *filename, ScriptVariable *variables, int usedVariables 
 				value = var->value;
 			int count = 0;
 			sscanf(cmd[3], "%d", &count);
-			var = getScriptVariable(cmd[5], variables, usedVariables);
+			var = getScriptVariable(cmd[5], variables);
 			var->value = SetSelection((int)value, count);
 		}
 		else if (!strcmp(cmd[0], "@wend"))
@@ -181,7 +195,7 @@ int _ExecuteScript(char *filename, ScriptVariable *variables, int usedVariables 
 					var = &variables[i];
 					break;
 				}*/
-			ScriptVariable *var = getScriptVariable(cmd[1], variables, usedVariables);
+			ScriptVariable *var = getScriptVariable(cmd[1], variables);
 			int loopId = 0;
 			if (!strcmp(cmd[0], "@for"))
 				sscanf(cmd[5], "%d", &loopId);
@@ -206,8 +220,9 @@ int _ExecuteScript(char *filename, ScriptVariable *variables, int usedVariables 
 		else if (!strcmp(cmd[0], "if") || !strcmp(cmd[0], "while") || !strcmp(cmd[0], "@while"))
 		{
 			int ifResult = 0;
-			for (int i = 0; i <= usedVariables; i++)
-				if (!strcmp(variables[i].name, cmd[1]))
+			for (int i = 0; i < variables.size(); i++)
+			{
+				if (variables[i].name == cmd[1])
 				{
 					double compareTo = 0;
 					sscanf(cmd[3], "%lf", &compareTo);
@@ -226,6 +241,7 @@ int _ExecuteScript(char *filename, ScriptVariable *variables, int usedVariables 
 					else if (!strcmp(cmd[2], "<>"))
 						ifResult = variableCompare(&variables[i], compareTo, 0, 1, 1);
 				}
+			}
 			if (!strcmp(cmd[0], "while") || !strcmp(cmd[0], "@while"))
 			{
 				int loopId = 0;
@@ -276,11 +292,11 @@ int _ExecuteScript(char *filename, ScriptVariable *variables, int usedVariables 
 		else // equation
 		{
 			ScriptVariable *result = NULL;
-			double op1, op2 = 0;
+			double op1 = 0, op2 = 0;
 			char oper = '+';
-			for (int i = 0; i <= usedVariables; i++)
+			for (int i = 0; i < variables.size(); i++)
 			{
-				if (!strcmp(variables[i].name, cmd[0]))
+				if (variables[i].name == cmd[0])
 				{
 					result = &variables[i];
 					break;
@@ -288,12 +304,9 @@ int _ExecuteScript(char *filename, ScriptVariable *variables, int usedVariables 
 			}
 			if (result == NULL)
 			{
-				result = &variables[++usedVariables];
-				strcpy(result->name, cmd[0]);
-				if (cmd[0][0] == '%' || cmd[0][0] == '$' || cmd[0][0] == '#')
-					result->type = TYPE_TEMPORARY;
-				else
-					result->type = TYPE_VST_FLOAT_PARAM;
+				auto isTemp = cmd[0][0] == '%' || cmd[0][0] == '$' || cmd[0][0] == '#';
+				variables.push_back(createVariable(cmd[0], 0, isTemp ? TYPE_TEMPORARY : TYPE_VST_FLOAT_PARAM));
+				result = &variables[variables.size() - 1];
 			}
 			if (!strcmp(cmd[1], "as_integer"))
 			{
@@ -312,8 +325,8 @@ int _ExecuteScript(char *filename, ScriptVariable *variables, int usedVariables 
 			else if (!strcmp("random", cmd[2]))
 				op1 = (double)(rand() % 30000) / 30000.0;
 			else
-				for (int i = 0; i <= usedVariables; i++)
-					if (!strcmp(variables[i].name, cmd[2]))
+				for (int i = 0; i < variables.size(); i++)
+					if (variables[i].name == cmd[2])
 					{
 						op1 = variables[i].value;
 						break;
@@ -327,8 +340,8 @@ int _ExecuteScript(char *filename, ScriptVariable *variables, int usedVariables 
 				else if (!strcmp("random", cmd[4]))
 					op2 = (double)(rand() % 30000) / 30000.0;
 				else
-					for (int i = 0; i <= usedVariables; i++)
-						if (!strcmp(variables[i].name, cmd[4]))
+					for (int i = 0; i < variables.size(); i++)
+						if (variables[i].name == cmd[4])
 						{
 							op2 = variables[i].value;
 							break;
@@ -347,92 +360,34 @@ int _ExecuteScript(char *filename, ScriptVariable *variables, int usedVariables 
 		}
 	}
 	fclose(script);
-	return usedVariables;
 }
 
-/*char * evaluate(char *src, char *dst, int size, char openTag, char closeTag) {
-	char *ptr = src, *temp = (char*)malloc(size);
-	char *ptr_temp = temp;
-	if (*ptr != openTag)
-		*(ptr_temp++) = *ptr;
-	while (*ptr && ptr - src < size && ptr_temp - temp < size) {
-		ptr++;
-		if (*ptr == openTag) {
-			char *evalResult = (char*)malloc(size);
-			ptr = evaluate(ptr, evalResult, size, openTag, closeTag);
-			*(ptr_temp++) = 0;
-			strcat(temp, evalResult);
-			ptr_temp = &temp[strlen(temp)];
-			free(evalResult);
-		}
-		else if (*ptr == closeTag) {
-			*(ptr_temp++) = 0;
-			_evaluate(temp, dst);
-			break;
-		}
-		else {
-			*(ptr_temp++) = *ptr;
-		}
-		if (*ptr == 0)
-		{
-			strcpy(dst, temp);
-		}
-	}
-	free(temp);
-	return ptr;
-}*/
-
-unsigned int ExecuteScript(char *filename, char **dtoStream, char *initial)
+std::vector<ParamDTO> ExecuteScript(const std::string &filename, std::vector<ScriptVariable> &initial)
 {
-	ScriptVariable variables[1000];
-	strcpy(variables[0].name, "#index");
-	variables[0].type = TYPE_TEMPORARY;
-	variables[0].value = 0;
-	int usedVariables = 0;
+	std::vector<ScriptVariable> variables;
+	variables.push_back(createVariable("#index"));
+	for (auto i = 0; i < initial.size(); i++)
+	{
+		variables.push_back(initial[i]);
+	}
 	srand((int)time(NULL));
 	rand();
-	char *ptr = initial;
-	char buf[32];
-	int bpos = 0;
-	while (*ptr != 0)
-	{
-		if (*ptr == '>')
-		{
-			buf[bpos] = 0;
-			sscanf(buf, "%lf", &variables[usedVariables].value);
-			variables[usedVariables].type = TYPE_VST_FLOAT_PARAM;
-			bpos = 0;
-		}
-		else if (*ptr == '<')
-		{
-			buf[bpos] = 0;
-			strcpy(variables[++usedVariables].name, buf);
-			bpos = 0;
-		}
-		else
-		{
-			buf[bpos++] = *ptr;
-		}
-		ptr++;
-	}
-	usedVariables = _ExecuteScript(filename, variables, usedVariables);
-
+	_ExecuteScript(filename, variables);
 	unsigned int size = 0;
-	char *mem = (char *)malloc(1);
-	for (int i = 0; i <= usedVariables; i++)
+	std::vector<ParamDTO> dtos;
+	for (int i = 0; i < variables.size(); i++)
 	{
 		ScriptVariable *var = &variables[i];
 		if (var->type != TYPE_VST_FLOAT_PARAM && var->type != TYPE_VST_INTEGER_PARAM) continue;
 		ParamDTO dto;
-		int len = strlen(var->name), intVal = -1;
+		int intVal = -1;
 		if (var->type == TYPE_VST_INTEGER_PARAM)
 		{
 			intVal = (int)var->value;
 		}
-		dto.create(var->name, (float)var->value);
+		dto.create(var->name.c_str(), (float)var->value);
 		dto.intValue = intVal;
-		size = dto.toMem(&mem, size);
+		dtos.push_back(dto);
 	}
-	*dtoStream = mem;
-	return size;
+	return dtos;
 }

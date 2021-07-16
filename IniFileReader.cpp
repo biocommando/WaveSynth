@@ -13,7 +13,7 @@ IniFileReader::~IniFileReader()
 }
 
 
-extern void WriteLog(char*, double);
+extern void WriteLog(const char*, double);
 
 void IniFileReader::readCharValue(char *segment, char *key, char *value)
 {

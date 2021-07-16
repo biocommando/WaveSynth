@@ -114,7 +114,6 @@ void WavePlayer::StopPlay(int voice)
 	voices[voice].key = voices[voice].keyTemp = -1;
 	while (lastActiveVoice >= 0 && !voices[lastActiveVoice].isPlaying)
 		lastActiveVoice--;
-	//extern void WriteLog(char*, double = 0);
 }
 void WavePlayer::StartPlay(double freqHz, int voice)
 {
@@ -128,7 +127,6 @@ void WavePlayer::StartPlay(double freqHz, int voice)
 	voices[voice].tailMultiplier = tailMultiplier;
 	voices[voice].filter->reset();
 	if (voice > lastActiveVoice) lastActiveVoice = voice;
-	//extern void WriteLog(char*, double = 0);
 }
 void WavePlayer::CreateBuffer(short *waveMemoryTemp, unsigned int waveLenTemp)
 {

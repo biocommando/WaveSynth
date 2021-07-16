@@ -2,7 +2,7 @@
 #include <cstring>
 #include <cstdio>
 
-extern void WriteLog(char*, double);
+extern void WriteLog(const char*, double);
 MinimalParameter::MinimalParameter(char *name, double defaultVal, double scaling, double addition, char *label)
 {
 	strcpy_s(this->name, 32, name);

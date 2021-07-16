@@ -1,4 +1,7 @@
 #pragma once
+#include "ParamDto.h"
+#include <string>
+#include <vector>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -9,8 +12,9 @@
 #define TYPE_VST_INTEGER_PARAM 3
 
 typedef struct{
-	char type, name[32];
+	char type;
+	std::string name;
 	double value;
 } ScriptVariable;
 
-unsigned int ExecuteScript(char *filename, char **dtoStream, char *initial);
+std::vector<ParamDTO> ExecuteScript(const std::string &filename, std::vector<ScriptVariable> &initial);

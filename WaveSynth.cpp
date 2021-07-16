@@ -13,7 +13,7 @@ AudioEffect* createEffectInstance(audioMasterCallback audioMaster) {
 }
 bool loggingOn = true;
 // same as above but persists the file until it is unloaded... this can be used when a faster logwrite is needed
-void WriteLogPersist(char *msg, double val = 0, bool unLoad = false)
+void WriteLogPersist(const char *msg, double val = 0, bool unLoad = false)
 {
 	if (!loggingOn) return;
 	static int event_id = 0;
@@ -31,7 +31,7 @@ void WriteLogPersist(char *msg, double val = 0, bool unLoad = false)
 		log = NULL;
 	}
 }
-void WriteLog(char *msg, double val = 0)
+void WriteLog(const char *msg, double val = 0)
 {
 	WriteLogPersist(msg, val, true);
 }

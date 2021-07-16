@@ -5,7 +5,7 @@
 #include "strrpl.h"
 #include "IniFileReader.h"
 
-extern void WriteLog(char*, double);
+extern void WriteLog(const char*, double);
 
 const int knobSize = 48;
 
@@ -204,7 +204,7 @@ void EditorGui::fillMacroMenu(MacroMenu *menu, MacroCache *cache, int tag)
 						if (paramIdx == 0)
 							strcat(macroText, " ");
 						char paramStr[100];
-						sprintf(paramStr, "%s<%s>", variable, value);
+						sprintf(paramStr, "%s>%s>", variable, value);
 						strcat(macroText, paramStr);
 						paramIdx++;
 					}
@@ -417,6 +417,22 @@ void EditorGui::close()
 	//free(macroCommands);
 }
 
+std::vector<std::string> splitString(const std::string& s, char c)
+{
+	std::vector<std::string> ret;
+	int pos = 0;
+	do {
+		auto pos0 = pos;
+		pos = s.find(c, pos);
+		if (pos != std::string::npos)
+		{
+			ret.push_back(s.substr(pos0, pos - pos0));
+			pos++;
+		}
+	} while(pos != std::string::npos);
+	return ret;
+}
+
 void MacroMenu::doMacroEdits(AEffGUIEditor *editor, long lastTweakedTag)
 {
 	if (getCurrentIndex() <= 0) return;
@@ -424,7 +440,6 @@ void MacroMenu::doMacroEdits(AEffGUIEditor *editor, long lastTweakedTag)
 	char *command = &macroCommands[MACRO_COMMAND_LENGTH * (getCurrentIndex() - 1)];
 	int numCmd = sscanf(command, "%s %s %s", cmd, scriptName, otherScriptVariables);
 	AudioEffect *effect = editor->getEffect();
-	extern void WriteLog(char*, double = 0);
 
 	if (!strcmp(cmd, "last") && lastTweakedTag >= 0)
 	{
@@ -450,13 +465,12 @@ void MacroMenu::doMacroEdits(AEffGUIEditor *editor, long lastTweakedTag)
 		char filename[1024];
 		getWorkDir(filename);
 		sprintf(filename, "%sscripts\\%s.syn", filename, scriptName);
-		char *mem = NULL, *ptr;
-		char *initial = (char*)malloc(1);
-		initial[0] = 0;
-		int initial_sz = 1;
+		char *mem = NULL;
+		std::vector<ScriptVariable> initial;
 		for (int i = 0; i < NUM_PARAMS + 4; i++)
 		{
-			char s[100], name[100];
+			char name[100];
+			char type = TYPE_TEMPORARY;
 			float value;
 			if (i < NUM_PARAMS)
 			{
@@ -467,6 +481,7 @@ void MacroMenu::doMacroEdits(AEffGUIEditor *editor, long lastTweakedTag)
 
 				effect->getParameterName(i, name);
 				value = effect->getParameter(i);
+				type = TYPE_VST_FLOAT_PARAM;
 			}
 			else if (i == NUM_PARAMS)
 			{
@@ -486,27 +501,29 @@ void MacroMenu::doMacroEdits(AEffGUIEditor *editor, long lastTweakedTag)
 			}
 			
 			if (i == NUM_PARAMS + 3)
-				sprintf(s, "%s", otherScriptVariables);
+			{
+				auto vars = splitString(otherScriptVariables, '>');
+				for (int i = 0; i < vars.size(); i += 2)
+				{
+					ScriptVariable var = { TYPE_TEMPORARY, vars[i], std::stod(vars[i + 1]) };
+					initial.push_back(var);
+				}
+			}
 			else
 			{
-				sprintf(s, "%s<%f>", name, value);
+				ScriptVariable var = { type, std::string(name), value };
+				initial.push_back(var);
 			}
-			initial_sz += strlen(s);
-			initial = (char *)realloc(initial, initial_sz);
-			strcat(initial, s);
 		}
-		//WriteLog(initial, 1);
-		initial[initial_sz - 1] = 0;
-		unsigned int byteSize = ExecuteScript(filename, &mem, initial);
-		free(initial);
+		auto dtos = ExecuteScript(filename, initial);
+		WriteLog("Execute script done, handling dtos", dtos.size());
 
-		ptr = mem;
-		while (ptr - mem < (long)byteSize)
+		for (int i = 0; i < dtos.size(); i++)
 		{
-			ParamDTO dto;
-			ptr = dto.fromMem(ptr);
-			//WriteLog(dto.id, dto.floatValue);
-			int index = ((WaveSynth*)effect)->setParameter(&dto);
+			WriteLog("Hanlding dto", i);
+			auto dto = &dtos[i];
+			WriteLog(dto->id, dto->floatValue);
+			int index = ((WaveSynth*)effect)->setParameter(dto);
 			if (index > -1)
 			{
 				editor->setParameter(index, effect->getParameter(index));
@@ -596,7 +613,6 @@ void EditorGui::setParameter(VstInt32 index, float value)
 	//-- setParameter is called when the host automates one of the effects parameter.
 	//-- The UI should reflect this state so we set the value of the control to the new value.
 	//-- VSTGUI will automaticly redraw changed controls in the next idle (as this call happens to be in the process thread).
-	extern void WriteLog(char*, double = 0);
 	((WaveSynth*)effect)->startTransaction();
 	if (frame && index < NUM_PARAMS)
 	{
@@ -610,8 +626,6 @@ void EditorGui::setParameter(VstInt32 index, float value)
 				((WaveSynth*)effect)->getBankAndPatchName(labelTextTemp, effect->getParameter(P_SET(i, P_BANK)), effect->getParameter(P_SET(i, P_PATCH)));
 				sprintf(labelText, "Osc %d: %s", i + 1, labelTextTemp);
 				banksAndPatches[i]->setText(labelText);
-				/*controls[P_SET(i, P_BANK)]->setValue(value);
-				controls[P_SET(i, P_PATCH)]->setValue(value);*/
 			}
 		}
 	}
