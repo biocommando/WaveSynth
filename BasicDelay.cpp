@@ -7,9 +7,9 @@ BasicDelay::BasicDelay(unsigned long bufferLength, int sampleRate)
 	this->bufferLength = bufferLength;
 	this->delaySamples = 0;
 	feed = 0;
-	buffer = (double*)malloc(sizeof(double) * bufferLength);
-	for (unsigned long i = 0; i < bufferLength; i++)
-		buffer[i] = 0;
+	buffer = std::make_unique<double[]>(bufferLength);//(double*)malloc(sizeof(double) * bufferLength);
+	/*for (unsigned long i = 0; i < bufferLength; i++)
+		buffer[i] = 0;*/
 	index = 0;
 #ifdef interpolated_delay
 	findex = 0;
@@ -20,7 +20,6 @@ BasicDelay::BasicDelay(unsigned long bufferLength, int sampleRate)
 
 BasicDelay::~BasicDelay()
 {
-	free(buffer);
 }
 
 double BasicDelay::process(double input)

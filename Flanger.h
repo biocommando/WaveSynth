@@ -1,5 +1,6 @@
 #pragma once
 #include "BasicOscillator.h"
+#include <memory>
 
 #define FLANGER_BUF_LEN 600
 
@@ -8,7 +9,7 @@ class Flanger
 private:
 	BasicOscillator *osc;
 	double delay, depth, freq;
-	double *buffer;
+	std::unique_ptr<double[]> buffer;
 	int index;
 	int bufferLength, bufferLenDiv3;
 public:

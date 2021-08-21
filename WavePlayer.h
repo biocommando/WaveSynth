@@ -34,7 +34,8 @@ private:
 	int voiceMode;
 	int lastActiveVoice;
 	unsigned int waveLen, waveLoop1, waveLoop2, modLoop, modLoop2;
-	double *waveMemory, origFreqHz, playSpeedModifier, octave, tailMultiplier;
+	std::unique_ptr<double[]> waveMemory;
+	double origFreqHz, playSpeedModifier, octave, tailMultiplier;
 	double waveShaping;
 	double pitchMultiplier; // for pitchbend
 	int sampleRate;

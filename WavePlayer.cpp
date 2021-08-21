@@ -37,7 +37,6 @@ WavePlayer::~WavePlayer()
 {
 	delete LFO;
 	delete DCCut;
-	ResetWaveMemory();
 	for (int voice = 0; voice < NUM_VOICES; voice++)
 	{
 		delete voices[voice].filter;
@@ -94,10 +93,9 @@ void WavePlayer::ReadFile(FILE *fIn)
 	double sampleRateConversion = (double)sampleRate / 44100.0;
 	origFreqHz *= sampleRateConversion;
 	fseek(fIn, dataOffset + originalPosition, SEEK_SET);
-	short *waveMemoryTemp = (short*)malloc(sizeof(short) * waveLenTemp);
-	fread(waveMemoryTemp, sizeof(short), waveLenTemp, fIn);
-	CreateBuffer(waveMemoryTemp, waveLenTemp);
-	free(waveMemoryTemp);
+	auto waveMemoryTemp = std::make_unique<short[]>(waveLenTemp);
+	fread(waveMemoryTemp.get(), sizeof(short), waveLenTemp, fIn);
+	CreateBuffer(waveMemoryTemp.get(), waveLenTemp);
 }
 
 void WavePlayer::SetPitchMultiplier(double multiplier)
@@ -130,10 +128,9 @@ void WavePlayer::StartPlay(double freqHz, int voice)
 }
 void WavePlayer::CreateBuffer(short *waveMemoryTemp, unsigned int waveLenTemp)
 {
-	ResetWaveMemory();
 	setMemoryLock(true);
 	waveLen = waveLenTemp;
-	waveMemory = (double*)malloc(sizeof(double) * waveLen);
+	waveMemory = std::make_unique<double[]>(waveLen);
 	for (unsigned int ui = 0; ui < waveLen; ui++)
 	{
 		double temp = (double)waveMemoryTemp[ui] * 0.000030517578125; // 1/32768.0=0.000030517578125
@@ -149,14 +146,14 @@ void WavePlayer::StopLoop(int voice)
 
 void WavePlayer::ResetWaveMemory()
 {
-	if (waveLen)
+	/*if (waveLen)
 	{
 		setMemoryLock(true);
 		free(waveMemory);
 		waveMemory = NULL;
 		setMemoryLock(false);
 		waveLen = 0;
-	}
+	}*/
 }
 
 void WavePlayer::SetVoiceMode(int mode)

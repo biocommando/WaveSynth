@@ -327,29 +327,34 @@ WaveSynth::~WaveSynth() {
 // all else: parameter data
 VstInt32 WaveSynth::getChunk(void** data, bool isPreset)
 {
-	unsigned int chunkSize = 2 + sizeof(unsigned short) + sizeof(unsigned int) + sizeof(int) + sizeof(int);
-	if (chunk == NULL)
-		chunk = (char*)malloc(chunkSize);
-	chunk[0] = 'v';
-	chunk[1] = 'i';
+	if (chunk)
+		free(chunk);
+
+	const unsigned int headerSize = 2 + sizeof(unsigned short) + sizeof(unsigned int) + sizeof(int) + sizeof(int);
+	char header[headerSize];
+	header[0] = 'v';
+	header[1] = 'i';
 	unsigned short version = CURRENT_VERSION;
 	int offset = 2;
-	memcpy(&chunk[offset], &version, sizeof(unsigned short));
+	memcpy(&header[offset], &version, sizeof(unsigned short));
 	offset += sizeof(unsigned short);
-	memcpy(&chunk[offset], &chunkSize, sizeof(unsigned int));
+	memcpy(&header[offset], &headerSize, sizeof(unsigned int));
 	offset += sizeof(unsigned int);
 	int selectedPack = settings->getSelectedPackIndex();
-	memcpy(&chunk[offset], &selectedPack, sizeof(int));
+	memcpy(&header[offset], &selectedPack, sizeof(int));
 	offset += sizeof(unsigned int);
-	memcpy(&chunk[offset], &randomSeed, sizeof(int));
+	memcpy(&header[offset], &randomSeed, sizeof(int));
+	std::string s(header, headerSize);
 	for (int i = 0; i < NUM_PARAMS; i++)
 	{
 		ParamDTO dto;
 		getParameter(&dto, i);
-		chunkSize = dto.toMem(&chunk, chunkSize);
+		s.append(dto.toMem());
 	}
-	*data = chunk;
-	return chunkSize;
+
+	*data = malloc(s.size());
+	memcpy(*data, s.c_str(), s.size());
+	return s.size();
 }
 
 void WaveSynth::setSelectedPack(int packIndex)
@@ -373,10 +378,7 @@ void WaveSynth::setSelectedPack(int packIndex)
 
 VstInt32 WaveSynth::setChunk(void* data, VstInt32 byteSize, bool isPreset)
 {
-	if (chunk != NULL)
-		free(chunk);
-	chunk = (char*)malloc(byteSize);
-	memcpy(chunk, (char*)data, byteSize);
+	auto chunk = (char*)data;
 
 	unsigned short version;
 	unsigned int dataOffset = 0;
@@ -794,8 +796,6 @@ void WaveSynth::processReplacing(float **inputs, float **outputs,
 			const double monoOut = osc[oscid]->process(lfoToOscLfo * LFO->value) * voiceVolumeLevel;
 			const double panCh1 = voicePan * (1 - LFO->value * lfoToPan);
 			const double panCh0 = 1 - panCh1;
-			/*outputs[0][i] += (float)(monoOut * panCh0);
-			outputs[1][i] += (float)(monoOut * panCh1);*/
 			outputBuf[i] += (float)(monoOut * panCh0);
 			outputBuf[i + chBufSz] += (float)(monoOut * panCh1);
 		}

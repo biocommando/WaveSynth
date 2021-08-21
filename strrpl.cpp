@@ -1,4 +1,5 @@
 #include"strrpl.h"
+#include<memory>
 
 void putchbuf(char *buf, int size, int pos, char c)
 {
@@ -9,8 +10,8 @@ void putchbuf(char *buf, int size, int pos, char c)
 void strrpl(char *src, char *dst, int size, char *oldS, char *newS, int replaceAll)
 {
 	int srcLen = strlen(src), oldLen = strlen(oldS), newLen = strlen(newS);
-	char *temp = (char*)malloc(size);
-	strcpy(temp, src);
+	auto temp = std::make_unique<char[]>(size);
+	strcpy(temp.get(), src);
 	int foundPos = 0;
 	int dstPos = -1;
 	int pos;
@@ -22,7 +23,7 @@ void strrpl(char *src, char *dst, int size, char *oldS, char *newS, int replaceA
 			{
 				int i;
 				for (i = 0; i < newLen; i++)
-					putchbuf(temp, size, ++dstPos, newS[i]);
+					putchbuf(temp.get(), size, ++dstPos, newS[i]);
 				foundPos = 0;
 				if (!replaceAll) break;
 			}
@@ -31,16 +32,15 @@ void strrpl(char *src, char *dst, int size, char *oldS, char *newS, int replaceA
 		{
 			while (foundPos >= 0)
 			{
-				putchbuf(temp, size, ++dstPos, src[pos - foundPos]);
+				putchbuf(temp.get(), size, ++dstPos, src[pos - foundPos]);
 				foundPos--;
 			}
 			foundPos = 0;
 		}
 		else
-			putchbuf(temp, size, ++dstPos, src[pos]);
+			putchbuf(temp.get(), size, ++dstPos, src[pos]);
 	}
-	putchbuf(temp, size, ++dstPos, 0);
-	temp[size - 1] = 0;
-	strcpy(dst, temp);
-	free(temp);
+	putchbuf(temp.get(), size, ++dstPos, 0);
+	temp.get()[size - 1] = 0;
+	strcpy(dst, temp.get());
 }

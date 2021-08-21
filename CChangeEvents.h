@@ -1,7 +1,7 @@
 #pragma once
 #include "audioeffectx.h"
 #include "aeffguieditor.h"
-#include <list>
+#include <vector>
 
 class CChangeMapping
 {
@@ -20,7 +20,7 @@ class CChangeEvents
 {
 private:
 	AudioEffectX *plugin;
-	CChangeMapping **mappings;
+	std::vector<CChangeMapping> mappings;
 	int mappingCount;
 public:
 	void addCCMapping(VstInt32 paramNumber, int controllerNumber);

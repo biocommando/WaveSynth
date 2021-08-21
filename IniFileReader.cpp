@@ -82,7 +82,7 @@ double IniFileReader::readDoubleValue(char *segment, char *key)
 {
 	char value[256] = "";
 	readCharValue(segment, key, value);
-	int dValue = 0;
+	double dValue = 0;
 	sscanf(value, "%lf", &dValue);
 	return dValue;
 }

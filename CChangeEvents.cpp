@@ -27,7 +27,6 @@ void CChangeMapping::setValueAndNotify(float value, AudioEffectX *plugin)
 
 CChangeEvents::CChangeEvents(AudioEffectX *plugin)
 {
-	mappings = (CChangeMapping**) malloc(sizeof(CChangeMapping*));
 	mappingCount = 0;
 	this->plugin = plugin;
 }
@@ -35,18 +34,15 @@ CChangeEvents::CChangeEvents(AudioEffectX *plugin)
 
 CChangeEvents::~CChangeEvents()
 {
-	for (int i = 0; i < mappingCount; i++)
-		delete mappings[i];
-	free(mappings);
 }
 
 
 void CChangeEvents::addCCMapping(VstInt32 paramNumber, int controllerNumber)
 {
 	mappingCount++;
-	mappings = (CChangeMapping**) realloc(mappings, mappingCount * sizeof(CChangeMapping*));
 	const int mappingIndex = mappingCount - 1;
-	mappings[mappingIndex] = new CChangeMapping(paramNumber, controllerNumber);
+	CChangeMapping mapping(paramNumber, controllerNumber);
+	mappings.push_back(mapping);
 }
 
 void CChangeEvents::onControllerChange(int controllerNumber, int value0to127)
@@ -55,9 +51,9 @@ void CChangeEvents::onControllerChange(int controllerNumber, int value0to127)
 	value = value > 1 ? 1 : (value < -1 ? -1 : value);
 	for (int i = 0; i < mappingCount; i++)
 	{
-		if (mappings[i]->getControllerNumber() == controllerNumber)
+		if (mappings[i].getControllerNumber() == controllerNumber)
 		{
-			mappings[i]->setValueAndNotify(value, plugin);
+			mappings[i].setValueAndNotify(value, plugin);
 			//break;
 		}
 	}

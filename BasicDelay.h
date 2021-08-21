@@ -1,12 +1,14 @@
 #pragma once
 #include <stdlib.h>
+#include <memory>
 
 class BasicDelay
 {
 private:
 	unsigned long delaySamples, bufferLength, index;
 	int sampleRate;
-	double *buffer, feed;
+	std::unique_ptr<double[]> buffer;
+	double feed;
 
 #ifdef interpolated_delay
 	double findex, indexinc;

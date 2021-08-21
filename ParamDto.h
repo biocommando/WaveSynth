@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include<cstring>
 #include<cstdlib>
 #include<cstdio>
@@ -44,27 +45,31 @@ typedef struct {
 			intValue = -1;
 		return mem + blockSize;
 	}
-	unsigned int toMem(char** mem, unsigned int size)
+
+	std::string toMem()
 	{
-		int len = strlen(id);
-		unsigned short blockSize = len + 2 + sizeof(double) + sizeof(unsigned short);
-		unsigned int newSize = size + blockSize;
-		*mem = (char*)realloc(*mem, newSize);
-		char* buf = *mem + size;
-		memcpy(buf, &blockSize, sizeof(unsigned short));
-		buf += sizeof(unsigned short);
+		char len = (char)strlen(id);
+		unsigned short blockSize = len + 2 + sizeof(float) + sizeof(unsigned short);
+		char szHeader[sizeof(unsigned short)];
+		memcpy(szHeader, &blockSize, sizeof(unsigned short));
+		std::string s(szHeader, sizeof(szHeader));
+		char typeChar;
 		if (intValue != -1)
 		{
-			buf[0] = 'i';
+			typeChar = 'i';
 			floatValue = (float)intValue;
 		}
 		else
-			buf[0] = 'f';
-		buf[1] = (char)len;
-		memcpy(&buf[2], id, len);
-		memcpy(&buf[2 + len], &floatValue, sizeof(float));
-		return newSize;
+			typeChar = 'f';
+		s.append(&typeChar, 1);
+		s.append(&len, 1);
+		s.append(id);
+		char value[sizeof(float)];
+		memcpy(value, &floatValue, sizeof(float));
+		s.append(value, sizeof(value));
+		return s;
 	}
+
 	void fromString(const char* str)
 	{
 		char type = 0;

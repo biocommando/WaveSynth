@@ -6,10 +6,11 @@ extern void getWorkDir(char *workDir);
 
 WaveSynthSettings::WaveSynthSettings()
 {
-	char workDir[256] = "";
+	char workDir[1024] = "";
 	getWorkDir(workDir);
-	IniFileReader* reader = new IniFileReader();
-	char fileName[256];
+	IniFileReader _reader;
+	IniFileReader* reader = &_reader;
+	char fileName[1024];
 	sprintf(fileName, "%sconfig\\settings.ini", workDir);
 	reader->openFile(fileName);
 
@@ -34,9 +35,6 @@ WaveSynthSettings::WaveSynthSettings()
 		oversampling = 1;
 	else if (oversampling > 32)
 		oversampling = 32;
-
-	reader->closeFile();
-	delete reader;
 }
 
 

@@ -6,9 +6,8 @@ Flanger::Flanger(int sampleRate, double phase)
 	double bufferFactor = (double)sampleRate / 44100.0;
 	bufferLength = (int) (FLANGER_BUF_LEN * bufferFactor);
 	bufferLenDiv3 = bufferLength / 3;
-	buffer = (double*)malloc(bufferLength * sizeof(double));
-	for (int i = 0; i < bufferLength; i++)
-		buffer[i] = 0;
+	buffer = std::make_unique<double[]>(bufferLength);
+
 	osc = new BasicOscillator(sampleRate);
 	osc->setType(OSC_TRIANGLE);
 	osc->setFrequency(1);
@@ -22,7 +21,6 @@ Flanger::Flanger(int sampleRate, double phase)
 
 Flanger::~Flanger()
 {
-	free(buffer);
 	delete osc;
 }
 
