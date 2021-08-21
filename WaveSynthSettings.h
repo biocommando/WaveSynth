@@ -12,6 +12,7 @@ private:
 	char macrosFile[256];
 	char midiFile[256];
 	bool useGUI;
+	int oversampling;
 public:
 	
 	int getSelectedPackIndex();
@@ -23,6 +24,7 @@ public:
 	FILE *getBankDefinitionFile();
 	FILE *getMacroDefinitionFile();
 	FILE *getMidiMapDefinitionFile();
+	int getOversampling();
 	
 	WaveSynthSettings();
 	~WaveSynthSettings();

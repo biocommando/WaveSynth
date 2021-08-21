@@ -77,14 +77,21 @@ void WaveSynth::open()
 	ReadSettings();
 	GetBanksAndPatches();
 
+	oversampling = settings->getOversampling();
+
 	int sampleRate = (int)getSampleRate();
+
+	downsamplingFilter1 = MultistageLowpassFilter(sampleRate * oversampling, 4);
+	downsamplingFilter1.update(0.5 * sampleRate);
+	downsamplingFilter2 = MultistageLowpassFilter(sampleRate * oversampling, 4);
+	downsamplingFilter2.update(0.5 * sampleRate);
 
 	for (int ch = 0; ch < 2; ch++)
 	{
-		delay[ch] = new BasicDelay(sampleRate, sampleRate);
-		flanger[ch] = new Flanger(sampleRate, ch * 0.5);
+		delay[ch] = new BasicDelay(sampleRate * oversampling, sampleRate * oversampling);
+		flanger[ch] = new Flanger(sampleRate * oversampling, ch * 0.5);
 	}
-	LFO = new BasicOscillator(sampleRate);
+	LFO = new BasicOscillator(sampleRate * oversampling);
 
 	params[P_TOTAL_LEVEL] = new MinimalParameter("Level", 0.5, 1, 0, "");
 	params[P_UNISON_COUNT] = new MinimalParameter("Unison", 0, NUM_UNISON_VOICES * 0.99, 1, "");
@@ -130,7 +137,7 @@ void WaveSynth::open()
 	for (int oscid = 0; oscid < NUM_PARAM_SETS; oscid++)
 	{
 		char temp[10];
-		osc[oscid] = new WavePlayer(sampleRate);
+		osc[oscid] = new WavePlayer(sampleRate * oversampling);
 		sprintf(temp, "Bank_%d", oscid + 1);
 		params[P_SET(oscid, P_BANK)] = new MinimalParameter(temp, 0, 1, 0, "");
 		params[P_SET(oscid, P_BANK)]->tag = -1;
@@ -761,12 +768,11 @@ void WaveSynth::processReplacing(float **inputs, float **outputs,
 		softClip = params[P_SOFT_CLIP]->value,
 		lfoToPan = params[P_GLOBAL_LFO_TO_PAN]->value,
 		lfoToOscLfo = params[P_GLOBAL_LFO_TO_OSC_LFO]->value;
-	// init the output buffer to 0
-	for (int i = 0; i < sampleFrames; i++)
-	{
-		outputs[0][i] = 0;
-		outputs[1][i] = 0;
-	}
+
+	const auto chBufSz = sampleFrames * oversampling;
+	const auto outputBufSz = chBufSz * 2;
+	auto outputBuf = std::make_unique<float[]>(outputBufSz);
+
 	// Real processing goes here
 	for (int oscid = 0; oscid < NUM_PARAM_SETS; oscid++)
 	{
@@ -781,19 +787,21 @@ void WaveSynth::processReplacing(float **inputs, float **outputs,
 		osc[oscid]->setMemoryLock(true);
 		// Processing each oscillator for the whole buffer at a time vastly improves performance
 		// maybe it's a CPU caching thing?
-		for (int i = 0; i < sampleFrames; i++)
+		for (int i = 0; i < chBufSz; i++)
 		{
 			if (oscid == 0)
 				LFO->calculate();
 			const double monoOut = osc[oscid]->process(lfoToOscLfo * LFO->value) * voiceVolumeLevel;
 			const double panCh1 = voicePan * (1 - LFO->value * lfoToPan);
 			const double panCh0 = 1 - panCh1;
-			outputs[0][i] += (float)(monoOut * panCh0);
-			outputs[1][i] += (float)(monoOut * panCh1);
+			/*outputs[0][i] += (float)(monoOut * panCh0);
+			outputs[1][i] += (float)(monoOut * panCh1);*/
+			outputBuf[i] += (float)(monoOut * panCh0);
+			outputBuf[i + chBufSz] += (float)(monoOut * panCh1);
 		}
 		osc[oscid]->setMemoryLock(false);
 	}
-	for (int i = 0; i < sampleFrames; i++)
+	for (int i = 0; i < chBufSz; i++)
 	{
 		for (int ch = 0; ch < 2; ch++)
 		{
@@ -806,7 +814,7 @@ void WaveSynth::processReplacing(float **inputs, float **outputs,
 			{
 				lfoValue = LFO->ValueWithPhaseShift(lfoStreoOffset);
 			}
-			double tempOut = (outputs[ch][i] * totalLevel * (1 - lfoValue * lfoToLevel));
+			double tempOut = (outputBuf[ch * chBufSz + i] * totalLevel * (1 - lfoValue * lfoToLevel));
 			const double flangerAmount = flangerWet * (1 - lfoValue * lfoToFlanger);
 			tempOut = -flanger[ch]->process(tempOut) * flangerAmount + tempOut * (1 - flangerAmount);
 			tempOut += (delay[ch]->process(tempOut) * delayWet * (1 - lfoValue * lfoToDelay));
@@ -815,7 +823,18 @@ void WaveSynth::processReplacing(float **inputs, float **outputs,
 			{
 				tempOut = tempOut * (1 - clip) + (tempOut / (fabs(tempOut) + 1)) * clip;
 			}
-			outputs[ch][i] = (float)tempOut;
+			if (ch == 0)
+				tempOut = downsamplingFilter1.process(tempOut);
+			else
+				tempOut = downsamplingFilter2.process(tempOut);
+			outputBuf[ch * chBufSz + i] = (float)tempOut;
+
 		}
+	}
+	int outputBufIdx = 0;
+	for (int i = 0; i < sampleFrames; i++)
+	{
+		outputs[0][i] = outputBuf[i * oversampling];
+		outputs[1][i] = outputBuf[i * oversampling + chBufSz];
 	}
 }

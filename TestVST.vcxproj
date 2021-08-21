@@ -98,6 +98,7 @@
     <ClInclude Include="BasicDelay.h" />
     <ClInclude Include="BasicFilter.h" />
     <ClInclude Include="BasicOscillator.h" />
+    <ClInclude Include="Filter.h" />
     <ClInclude Include="ParamDto.h" />
     <ClInclude Include="PredictableRandom.h" />
     <ClInclude Include="PresetLoader.h" />

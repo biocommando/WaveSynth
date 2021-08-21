@@ -14,6 +14,7 @@
 #include <ctime>
 #include "PredictableRandom.h"
 #include "ParamDto.h"
+#include "Filter.h"
 
 
 class WaveSynth : public AudioEffectX
@@ -43,6 +44,9 @@ private:
 	void ChangePatch(WavePlayer *osc, MinimalParameter *pBank, MinimalParameter *pPatch);
 	void ReplaceStr(char *str, char replaceWhat, char replacement);
 	void setWaveFileOffset(FILE *waves, int bank, int patch);
+	int oversampling;
+	MultistageLowpassFilter downsamplingFilter1;
+	MultistageLowpassFilter downsamplingFilter2;
 public:
 	WaveSynth(audioMasterCallback audioMaster);
 	~WaveSynth();

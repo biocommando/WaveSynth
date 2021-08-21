@@ -29,6 +29,12 @@ WaveSynthSettings::WaveSynthSettings()
 	reader->readCharValue("files", "midiMap", fileName);
 	sprintf(midiFile, "%s%s", workDir, fileName);
 
+	oversampling = reader->readIntValue("general", "oversampling");
+	if (oversampling <= 0)
+		oversampling = 1;
+	else if (oversampling > 32)
+		oversampling = 32;
+
 	reader->closeFile();
 	delete reader;
 }
@@ -52,6 +58,11 @@ FILE *WaveSynthSettings::getMacroDefinitionFile()
 FILE *WaveSynthSettings::getMidiMapDefinitionFile()
 {
 	return fopen(midiFile, "r");
+}
+
+int WaveSynthSettings::getOversampling()
+{
+	return oversampling;
 }
 
 int WaveSynthSettings::getSelectedPackIndex()
