@@ -70,7 +70,7 @@
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>WINDOWS;_WINDOWS;WIN32;_USRDLL;_USE_MATH_DEFINES;NDEBUG;ENABLE_VST_EXTENSION_IN_VSTGUI;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <AdditionalIncludeDirectories>D:\VST3 SDK\vstgui.sf\vstgui;D:\VST3 SDK;D:\VST3 SDK\pluginterfaces\vst2.x;D:\VST3 SDK\public.sdk\source\vst2.x;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\VST3 SDK\vstgui.sf\vstgui;D:\VST3 SDK;D:\VST3 SDK\pluginterfaces\vst2.x;D:\VST3 SDK\public.sdk\source\vst2.x;C:\Users\space\Desktop\js-projects\SimpleScriptCompiler;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
@@ -98,6 +98,7 @@
     <ClInclude Include="BasicDelay.h" />
     <ClInclude Include="BasicFilter.h" />
     <ClInclude Include="BasicOscillator.h" />
+    <ClInclude Include="C:\Users\space\Desktop\js-projects\SimpleScriptCompiler\SimpleScript.h" />
     <ClInclude Include="Filter.h" />
     <ClInclude Include="ParamDto.h" />
     <ClInclude Include="PredictableRandom.h" />

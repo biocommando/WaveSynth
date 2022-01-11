@@ -1,6 +1,7 @@
 #include "Scripts.h"
 #include "WaveSynth.h"
 #include "strrpl.h"
+#include "SimpleScript.h"
 
 extern void WriteLog(const char*, double = 0);
 
@@ -364,7 +365,60 @@ void _ExecuteScript(const std::string &filename, std::vector<ScriptVariable> &va
 
 std::vector<ParamDTO> ExecuteScript(const std::string &filename, std::vector<ScriptVariable> &initial)
 {
-	std::vector<ScriptVariable> variables;
+	static bool srandDone = false;
+	if (!srandDone)
+	{
+		srand((int)time(NULL));
+		srandDone = true;
+	}
+	std::map<std::string, double> variables;
+	std::string entryPoint;
+	for (const auto& v : initial)
+	{
+		if (v.type == 'e')
+			entryPoint = v.name;
+		else
+			variables[v.name] = v.value;
+	}
+
+	std::string intParams;
+
+	const auto notify = [&variables, &intParams](const std::vector<std::string> & sv)
+	{
+		if (sv.size() > 1 && sv[0] == "params_are_integers")
+		{
+			for (const auto& s : sv)
+			{
+				intParams = intParams + "{" + s + "}";
+			}
+		}
+	};
+
+	SimpleScript script(filename);
+	try
+	{
+		script.execute(variables, notify, entryPoint);
+	}
+	catch (const std::exception & e)
+	{
+		WriteLog(e.what());
+		throw e;
+	}
+
+	std::vector<ParamDTO> dtos;
+	for (const auto& v : initial)
+	{
+		ParamDTO dto;
+		auto val = variables[v.name];
+		dto.create(v.name.c_str(), (float)val);
+		if (intParams.find('{' + v.name + '}') != std::string::npos)
+		{
+			dto.intValue = (int)val;
+		}
+		dtos.push_back(dto);
+	}
+	return dtos;
+	/*std::vector<ScriptVariable> variables;
 	variables.push_back(createVariable("#index"));
 	for (auto i = 0; i < initial.size(); i++)
 	{
@@ -389,5 +443,5 @@ std::vector<ParamDTO> ExecuteScript(const std::string &filename, std::vector<Scr
 		dto.intValue = intVal;
 		dtos.push_back(dto);
 	}
-	return dtos;
+	return dtos;*/
 }

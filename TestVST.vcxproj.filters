@@ -84,6 +84,9 @@
     <ClInclude Include="Filter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="C:\Users\space\Desktop\js-projects\SimpleScriptCompiler\SimpleScript.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="D:\VST3 SDK\public.sdk\source\vst2.x\audioeffect.cpp">

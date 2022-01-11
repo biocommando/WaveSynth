@@ -239,7 +239,7 @@ bool EditorGui::open(void* ptr)
 	}
 
 	CRect r(0, wSize->bottom - valueLabels[0]->getHeight(), wSize->right, wSize->bottom);
-	CTextLabel *label = new CTextLabel(r, "Little, ugly gnome - Wavetable synth - Joonas Salonpaa - 2016");
+	CTextLabel *label = new CTextLabel(r, "Little, ugly gnome - Wavetable synth - Joonas Salonpaa - 2016-2021");
 	newFrame->addView(label);
 	//macroCommands = (char*)malloc(1);
 	for (int i = 0; i < NUM_OF_MENUS; i++)
@@ -359,9 +359,9 @@ void MacroMenu::doMacroEdits(AEffGUIEditor *editor, long lastTweakedTag)
 		extern void getWorkDir(char*);
 		char filename[1024];
 		getWorkDir(filename);
-		sprintf(filename, "%sscripts\\%s.syn", filename, cmd->script.c_str());
+		sprintf(filename, "%sscripts_chimp\\output\\%s.script", filename, cmd->script.c_str()); // % s.syn", filename, cmd->script.c_str());
 		std::vector<ScriptVariable> initial;
-		for (int i = 0; i < NUM_PARAMS + 4; i++)
+		for (int i = 0; i < NUM_PARAMS + 5; i++)
 		{
 			char name[100];
 			char type = TYPE_TEMPORARY;
@@ -403,6 +403,12 @@ void MacroMenu::doMacroEdits(AEffGUIEditor *editor, long lastTweakedTag)
 					ScriptVariable var = { TYPE_TEMPORARY, param->name, param->value };
 					initial.push_back(var);
 				}
+			}
+			else if (i == NUM_PARAMS + 4)
+			{
+				strcpy(name, cmd->script.c_str());
+				ScriptVariable var = { 'e', cmd->script, 0 };
+				initial.push_back(var);
 			}
 			else
 			{
