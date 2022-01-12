@@ -7,7 +7,7 @@ inline sub get_number_of_presets
 return
 
 
-sub load_preset (load_preset_number)
+sub load_preset(load_preset_number)
     notify "preset_lookup", "load_preset"
     // The parameters loaded to "load_xxxxxx" variables.
     // Wave pack available in variable "load_wave_pack"

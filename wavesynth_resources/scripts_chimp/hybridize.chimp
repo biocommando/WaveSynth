@@ -1,0 +1,58 @@
+
+include @/lib/sub_extensions.js
+include $/preset-lookup.inc
+include $/legacy.js
+
+
+'macro hybr'
+str => {
+    return [
+        `is_param_def = isdef load_${str}`,
+        `if is_param_def`,
+        `fullHybridized = (load_${str} + ${str}) / 2`,
+        `${str} = ${str} * hybridizeAmountM1 + fullHybridized * hybridizeAmount`,
+        `endif`
+    ]
+}
+'macro end'
+
+'macro %hybr'
+str => {
+    return [1, 2, 3].map(i => 'hybr ' + str.replace('?', i))
+}
+'macro end'
+
+entrypoint hybridize
+
+params_as_integer Octave?, LFOShp?, Loop?
+
+hybridizeAmountM1 = 1 - hybridizeAmount
+
+call get_number_of_presets
+random = _random_
+preset_num = random % (preset_count - 2) + 2
+
+call load_preset (preset_num)
+
+%hybr Loop?
+%hybr CuePos?
+%hybr Octave?
+%hybr Detune?
+%hybr FCut_?
+%hybr FRes_?
+%hybr Wavshp?
+%hybr Attack?
+%hybr Decay?
+%hybr Sust.?
+%hybr Tail.?
+%hybr E2Cut_?
+%hybr LFOShp?
+%hybr LFOFrq?
+%hybr LFO2Pt?
+%hybr LFO2Cu?
+%hybr LFO2Fl?
+%hybr LFO2Lv?
+%hybr Pan_?
+%hybr Level_?
+
+exit
