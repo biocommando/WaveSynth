@@ -60,7 +60,7 @@ call generate_random_array
 
 Attack1 = random@0 * Decay2
 
-if wavePackIndexReadOnly = 0
+if wavePackIndexReadOnly == 0
     is_melodic_selected = 0
     while is_melodic_selected == 0
         call generate_random_array
