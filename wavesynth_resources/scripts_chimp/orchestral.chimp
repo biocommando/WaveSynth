@@ -1,0 +1,50 @@
+//' Little, ugly gnome VST synth script file
+//' Copyrights 2016 by Joonas Salonpaa
+//' This code will create an "orchestral" sound
+//' ********************************
+
+include $/init-all.inc
+include $/random.inc
+include $/randomflanger.chimp
+include $/spread.inc
+
+entrypoint orchestral
+
+call init_all
+
+call generate_random_array
+width = random@0 * 0.5
+detune = random@1 * 0.2
+detune = detune + 0.08
+%spread_mode = 1
+call spread
+
+CutOff = random@3 * 0.5
+CutOff = CutOff + 0.5
+Resonance = random@4 * 0.9
+
+params_as_integer Bank_?, Patch_?, Octave?, Loop?
+
+for index in 1 to 3
+	call generate_random_array
+%	Bank_? = 5
+%	Patch_? = random@1 * 8
+%	FCut_? = CutOff
+%	FRes_? = Resonance
+%	Octave? = index + 1
+%	Loop? = 1.5 + random@2
+%	Loop? = _truncate_
+	if Loop? = 2
+%		Tail.? = random@3 * 0.7
+%		Tail.? = Tail.? + 0.3
+	endif
+%	CuePos? = random@4
+%	Attack? = random@5
+%	Sust.? = random@6
+%	Decay? = random@7
+%	E2Cut_? = random@8
+loop
+
+call randomflanger
+
+exit

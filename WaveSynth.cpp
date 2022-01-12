@@ -7,10 +7,13 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cmath>
+#include "util.h"
 
-AudioEffect* createEffectInstance(audioMasterCallback audioMaster) {
+FstAudioEffect* createFstInstance(audioMasterCallback audioMaster)
+{
 	return new WaveSynth(audioMaster);
 }
+
 bool loggingOn = true;
 // same as above but persists the file until it is unloaded... this can be used when a faster logwrite is needed
 void WriteLogPersist(const char *msg, double val = 0, bool unLoad = false)
@@ -38,21 +41,10 @@ void WriteLog(const char *msg, double val = 0)
 
 void getWorkDir(char *workDir)
 {
-	// work out the resource directory
-	// first we get the DLL path from windows API
-	extern void * hInstance;
-	wchar_t wstrWorkDir[1024];
-	GetModuleFileName((HMODULE)hInstance, wstrWorkDir, 1024);
-	wcstombs(workDir, wstrWorkDir, 1024);
-	// let's get rid of the DLL file name
-	for (int i = strlen(workDir) - 1; i >= 0; i--)
-		if (workDir[i] == '\\')
-		{
-			workDir[i] = 0;
-			break;
-		}
-	// add the resource directory to the path
-	strcat(workDir, "\\wavesynth_resources\\");
+	auto dir = Util::getWorkDir(true);
+	if (dir.back() != '\\')
+		dir = dir + '\\';
+	strcpy(workDir, dir.c_str());
 }
 
 WaveSynth::WaveSynth(audioMasterCallback audioMaster) :
@@ -63,7 +55,13 @@ WaveSynth::WaveSynth(audioMasterCallback audioMaster) :
 	getWorkDir(workDir);
 	CChanges = new CChangeEvents(this);
 	chunk = NULL;
-	transactionCount = 0; 
+	transactionCount = 0;
+	isSynth(true);
+	programsAreChunks();
+	if (settings.getUseGUI())
+	{
+		hasEditor();
+	}
 }
 
 void WaveSynth::open()
@@ -74,10 +72,9 @@ void WaveSynth::open()
 	predictableRandom = new PredictableRandom();
 	predictableRandom->seed(randomSeed);
 	
-	ReadSettings();
 	GetBanksAndPatches();
 
-	oversampling = settings->getOversampling();
+	oversampling = settings.getOversampling();
 
 	int sampleRate = (int)getSampleRate();
 
@@ -212,10 +209,8 @@ void WaveSynth::open()
 		params[P_SET(oscid, P_PAN)] = new MinimalParameter(temp, 0.5, 200, -100, "%");
 		params[P_SET(oscid, P_PAN)]->showAsInt = 1;
 	}
-	isSynth(true);
-	programsAreChunks(true);
 
-	if (settings->getUseGUI())
+	if (settings.getUseGUI())
 	{
 		extern AEffGUIEditor* createEditor(AudioEffectX*);
 		setEditor(createEditor(this));
@@ -239,15 +234,10 @@ bool WaveSynth::isTransactionOver()
 	return transactionCount == 0;
 }
 
-void WaveSynth::ReadSettings()
-{
-	settings = new WaveSynthSettings();
-}
-
 void WaveSynth::ReadCCMappings()
 {
 	IniFileReader *reader = new IniFileReader();
-	reader->openFile(settings->getMidiMapDefinitionFile());
+	reader->openFile(settings.getMidiMapDefinitionFile());
 	int mapIdx = 0;
 	while (1)
 	{
@@ -307,7 +297,6 @@ void WaveSynth::close()
 
 	delete CChanges;
 	delete LFO;
-	delete settings;
 	delete predictableRandom;
 }
 
@@ -340,7 +329,7 @@ VstInt32 WaveSynth::getChunk(void** data, bool isPreset)
 	offset += sizeof(unsigned short);
 	memcpy(&header[offset], &headerSize, sizeof(unsigned int));
 	offset += sizeof(unsigned int);
-	int selectedPack = settings->getSelectedPackIndex();
+	int selectedPack = settings.getSelectedPackIndex();
 	memcpy(&header[offset], &selectedPack, sizeof(int));
 	offset += sizeof(unsigned int);
 	memcpy(&header[offset], &randomSeed, sizeof(int));
@@ -361,7 +350,7 @@ void WaveSynth::setSelectedPack(int packIndex)
 {
 	if (currentPack != packIndex)
 	{
-		settings->setSelectedPack(packIndex);
+		settings.setSelectedPack(packIndex);
 		GetBanksAndPatches();
 		for (int i = 0; i < NUM_PARAM_SETS; i++)
 		{
@@ -521,7 +510,7 @@ void WaveSynth::ChangePatch(WavePlayer *osc, MinimalParameter *pBank, MinimalPar
 		pPatch->tag = pPatch->GetSelection();
 		pBank->tag = pBank->GetSelection();
 		char temp[256], pack[256];
-		settings->getPack(settings->getSelectedPackIndex(), pack);
+		settings.getPack(settings.getSelectedPackIndex(), pack);
 		sprintf(temp, "%s%s", workDir, pack);
 		FILE *allWaves = fopen(temp, "rb");
 		setWaveFileOffset(allWaves, pBank->tag, pPatch->tag);
@@ -539,16 +528,16 @@ void WaveSynth::ReplaceStr(char *str, char replaceWhat, char replacement)
 
 FILE * WaveSynth::getMacroDefinitionFile()
 {
-	return settings->getMacroDefinitionFile();
+	return settings.getMacroDefinitionFile();
 }
 
 
 void WaveSynth::GetBanksAndPatches() {
 	char bankId[256];
-	currentPack = settings->getSelectedPackIndex();
-	settings->getPackId(currentPack, bankId);
+	currentPack = settings.getSelectedPackIndex();
+	settings.getPackId(currentPack, bankId);
 	IniFileReader *reader = new IniFileReader();
-	reader->openFile(settings->getBankDefinitionFile());
+	reader->openFile(settings.getBankDefinitionFile());
 	char temp[256];
 	sprintf(temp, "%s:banks", bankId);
 	numBanks = reader->readIntValue("general", temp);
@@ -671,7 +660,7 @@ bool WaveSynth::getProductString(char* text)
 }
 bool WaveSynth::getVendorString(char* text)
 {
-	strcpy_s(text, 64, "(c) 2016 Joonas Salonpaa");
+	strcpy_s(text, 64, "(c) 2016-2022 Joonas Salonpaa");
 	return true;
 }
 void WaveSynth::getBankAndPatchName(char *buff, double bank, double patch)
@@ -688,12 +677,12 @@ VstInt32 WaveSynth::processEvents(VstEvents* events)
 		if (!(events->events[i]->type&kVstMidiType))
 			continue;
 		VstMidiEvent *midievent = (VstMidiEvent*)(events->events[i]);
-		if (midievent->midiData[0] >> 4 == MIDI_NOTE_OFF)
+		if ((char)midievent->midiData[0] >> 4 == MIDI_NOTE_OFF)
 		{
 			for (int oscid = 0; oscid < NUM_PARAM_SETS; oscid++)
 				osc[oscid]->NoteOff(midievent->midiData[1]);
 		}
-		else if (midievent->midiData[0] >> 4 == MIDI_NOTE_ON)
+		else if ((char)midievent->midiData[0] >> 4 == MIDI_NOTE_ON)
 		{
 			int unisonCount = (int)(params[P_UNISON_COUNT]->value * 0.99 * NUM_UNISON_VOICES + 1);
 			int seqMode = params[P_SEQUENCE]->GetSelection();
@@ -726,7 +715,7 @@ VstInt32 WaveSynth::processEvents(VstEvents* events)
 				else if (seqMode == SEQ_MODE_RANDOM) sequence = predictableRandom->next(3);
 			}
 		}
-		else if (midievent->midiData[0] >> 4 == MIDI_PITCH_BEND)
+		else if ((char)midievent->midiData[0] >> 4 == MIDI_PITCH_BEND)
 		{
 			double pitchBendValue = midievent->midiData[2] * 128 + midievent->midiData[1];
 			// http://dsp.stackexchange.com/questions/1645/converting-a-pitch-bend-midi-value-to-a-normal-pitch-value
@@ -736,11 +725,11 @@ VstInt32 WaveSynth::processEvents(VstEvents* events)
 				osc[oscid]->SetPitchMultiplier(pitchMultiplier);
 			}
 		}
-		else if (midievent->midiData[0] >> 4 == MIDI_CC)
+		else if ((char)midievent->midiData[0] >> 4 == MIDI_CC)
 		{
 			CChanges->onControllerChange(midievent->midiData[1], midievent->midiData[2]);
 		}
-		else if (midievent->midiData[0] >> 4 == MIDI_AFTERTOUCH)
+		else if ((char)midievent->midiData[0] >> 4 == MIDI_AFTERTOUCH)
 		{
 			CChanges->onControllerChange(AFTERTOUCH_CC_NUMBER, midievent->midiData[1]);
 		}

@@ -1,0 +1,50 @@
+// Little, ugly gnome VST synth script file
+// Copyrights 2016 by Joonas Salonpaa
+// This code will verify if the selected Bank/Patch combination can be used as a melodic instrument.
+// Applies only to the "alternative" wavepack.
+// #index must be set to the corresponding value in order to get this to work
+// output: is_melodic_selected, 1 if instrument can be used melodically, 0 otherwise
+
+include $/legacy.js
+
+sub is_melodic_selected
+
+	is_melodic_selected = 1
+
+	resolve_question_mark Bank_?
+	resolve_question_mark Patch_?
+
+	// waveform
+	if Bank_? == 0
+		// all noise types
+		if Patch_? >= 5
+			is_melodic_selected = 0
+		endif
+	endif
+	// percs
+	if Bank_? == 3
+		// hihats
+		if Patch_? == 3
+			is_melodic_selected = 0
+		endif
+		if Patch_? == 4
+			is_melodic_selected = 0
+		endif
+		// shaker
+		if Patch_? == 5
+			is_melodic_selected = 0
+		endif
+		// tambourine
+		if Patch_? == 7
+			is_melodic_selected = 0
+		endif
+	endif
+	// blips
+	if Bank_? == 7
+		// noisy
+		if Patch_? == 7
+			is_melodic_selected = 0
+		endif
+	endif
+
+return

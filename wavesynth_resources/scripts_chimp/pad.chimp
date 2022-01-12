@@ -1,0 +1,111 @@
+// Little, ugly gnome VST synth script file
+// Copyrights 2017 by Joonas Salonpaa
+
+// create a spread-out feel with panning
+include $/legacy.js
+include $/random.inc
+include $/spread.inc
+include $/is-melodic-selected.inc
+
+entrypoint pad
+
+generate_random_array.max = 20
+call generate_random_array
+width = random@0 * 0.125 + 0.125
+detune = random@1 * 0.2
+spread_mode = 1
+call spread
+attack = random@2 * 0.5 + 0.49
+// slow attack
+Attack1 = attack
+Attack3 = attack
+// the centered osc will be faster
+Attack2 = attack * 0.5
+LFORate = random@3 * 0.3333
+
+params_as_integer Bank_?, Patch_?, Loop?, LfoType
+
+for index in 1 to 3
+    call generate_random_array
+    if wavePackIndexReadOnly == 0
+        is_melodic_selected = 0
+        while is_melodic_selected == 0
+            call generate_random_array
+%            Bank_? = random@0 * 7
+%            Bank_? = Bank_? + 1
+%            Patch_? = random@1 * 8
+            call is_melodic_selected
+        wend
+    else
+%        Bank_? = random@0 * 8
+%        Patch_? = random@1 * 8
+    endif
+    CutOff = random@2 * 0.65
+%    FCut_? = CutOff + 0.15
+%    FRes_? = 1 - FCut_?
+%    Wavshp? = random@3 * FRes_?
+%    Wavshp? = Wavshp? * 0.5
+    while Wavshp? < 0.1
+        call random
+%        Wavshp? = random
+    wend
+%    E2Cut_? = random@4
+%    LFOShp? = random@5
+%    LFOFrq? = LFORate * index
+%    LFO2Pt? = random@6 * 0.08
+%    LFO2Cu? = random@7 * 0.1
+%    LFO2Fl? = random@8 * 0.5
+%    LFO2Fl? = LFO2Fl? * LFO2Fl?
+%    LFO2Lv? = random@9 * 0.5
+%    LFO2Lv? = LFO2Lv? * LFO2Lv?
+%    CuePos? = random@10 * 0.1
+    OctaveSpread = random@11 * 0.42
+%    Octave? = OctaveSpread + 0.29
+%    Decay? = random@12 * 0.5
+%    Decay? = Decay? + 0.1
+%    Sust.? = random@13 * 0.3
+%    Sust.? = Sust.? + 0.3
+%    Tail.? = Attack? * 0.5
+%    Level_? = 1
+%    Loop? = 2
+loop
+
+// *** global params ***
+
+call generate_random_array
+
+// Unison
+Unison = random@0 * 0.2 + 0.05
+UDetune = Unison + Unison * random@1 * 0.5
+// Levels
+Level = 0.5 - Unison
+SoftClp = Level
+
+// Delay
+DelayTm = random@2 * 0.5
+DlyFeed = random@3 * 0.5
+DlyWet = random@4 * 0.5
+
+OscSeq = 0
+
+// Flanger
+FlngFrq = random@5 * 0.7 + 0.3
+FlngDly = random@6 * 0.9 + 0.1
+FlngWet = random@7 * 0.8 + 0.2
+FlngDpt = random@8 * 0.2 + 0.05
+
+// Modulation
+LfoFreq = (random@9 * 0.2 + 0.05) / 5
+LfoType = random@10 * 2
+L2Pan = random@11
+L2Level = random@12 * 0.2
+L2Delay = random@13 * 0.5
+L2Flang = random@14 * 0.5
+L2LFOs = random@15
+LowCut = 0
+L2Clip = random@16
+LStereo = random@17 * 0.8
+LStereo = 0.2 + LStereo
+L2LFOs = random@18 * 0.5
+
+exit

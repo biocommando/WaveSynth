@@ -1,0 +1,11 @@
+// Little, ugly gnome VST synth script file
+// Copyrights 2016 by Joonas Salonpaa
+
+include $/random.inc
+
+entrypoint reseed-random-seq
+
+call random
+randomSeed = random
+
+exit

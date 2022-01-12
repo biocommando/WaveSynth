@@ -84,17 +84,14 @@
     <ClInclude Include="Filter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="C:\Users\space\Desktop\js-projects\SimpleScriptCompiler\SimpleScript.h">
+    <ClInclude Include="..\..\..\js\SimpleScriptCompiler\SimpleScript.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="util.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="D:\VST3 SDK\public.sdk\source\vst2.x\audioeffect.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="D:\VST3 SDK\public.sdk\source\vst2.x\audioeffectx.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="BasicOscillator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -107,22 +104,10 @@
     <ClCompile Include="Flanger.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="D:\VST3 SDK\public.sdk\source\vst2.x\vstplugmain.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="WaveSynth.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MS20Filter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="D:\VST3 SDK\vstgui.sf\vstgui\aeffguieditor.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="D:\VST3 SDK\vstgui.sf\vstgui\vstcontrols.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="D:\VST3 SDK\vstgui.sf\vstgui\vstgui.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="EditorGui.cpp">
@@ -162,6 +147,18 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="PresetLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\fst\src\FstAudioEffect.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\fst\VSTGui\aeffguieditor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\fst\VSTGui\vstcontrols.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\fst\VSTGui\vstgui.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

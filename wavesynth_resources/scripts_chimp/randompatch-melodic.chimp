@@ -1,0 +1,23 @@
+//' Little, ugly gnome VST synth script file
+//' Copyrights 2016 by Joonas Salonpaa
+
+include $/is-melodic-selected.inc
+include $/legacy.js
+
+entrypoint randompatch-melodic
+
+params_as_integer Bank_?, Patch_?
+
+for index in 1 to 3
+	is_melodic_selected = 0
+	while is_melodic_selected == 0
+		r = rand
+%		Bank_? = r * 8
+		r = rand
+%		Patch_? = r * 8
+		is_melodic_selected = 1
+		call is_melodic_selected
+	wend
+loop
+
+exit

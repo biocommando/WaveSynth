@@ -1,0 +1,18 @@
+// Little, ugly gnome VST synth script file
+// Copyrights 2016 by Joonas Salonpaa
+include $/random.inc
+
+sub randomflanger
+    call generate_random_array
+
+    FlngFrq = random@0
+    FlngDly = random@1
+    FlngWet = random@2
+    FlngDpt = random@3
+return
+
+entrypoint randomflanger
+
+call randomflanger
+
+exit

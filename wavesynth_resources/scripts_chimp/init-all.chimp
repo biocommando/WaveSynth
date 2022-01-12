@@ -1,0 +1,7 @@
+include $/init-all.inc
+
+entrypoint init-all
+
+call init_all
+
+exit

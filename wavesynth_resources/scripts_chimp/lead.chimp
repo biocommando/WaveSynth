@@ -1,0 +1,98 @@
+//' Little, ugly gnome VST synth script file
+//' Copyrights 2017 by Joonas Salonpaa
+
+include $/init-all.inc
+include $/random.inc
+include $/is-melodic-selected.inc
+include $/delay-sync.chimp
+include $/unison.chimp
+
+entrypoint lead
+
+call init_all
+
+call generate_random_array
+
+dist = random@0 * 0.6
+dist = dist * dist
+tail = 0.1 * random@1
+
+fenv = random@2 * 0.7
+fenv = fenv + 0.3
+
+params_as_integer Bank_?, Patch_?, Octave?, LFOShp? 
+
+for index in 1 to 3
+%    Loop? = 1
+%    Wavshp? = dist
+%    Tail.? = tail
+    
+%    E2Cut_? = fenv
+%    FCut_? = fenv * 0.3 + 0.3
+%    FRes_? = fenv
+    if FRes_? > 0.88
+%        FRes_? = 0.88
+    endif
+loop
+
+detune = 0.2 * random@3 + 0.05
+Detune2 = 0.5 - detune
+Detune3 = 0.5 + detune
+sust = 0.3 * random@4
+sust = sust + 0.3
+sawlevel = 0.5 + random@5
+for index in 2 to 3
+%    Bank_? = 7
+%    Patch_? = 2
+    if wavePackIndexReadOnly == 0
+%        Bank_? = 0
+%        Patch_? = 1
+    endif
+%    Octave? = index
+%    Pan_? = Detune?
+%    Decay? = tail * 0.5
+%    Sust.? = sust
+%    Level_? = sawlevel
+loop
+
+generate_random_array.max = 12
+call generate_random_array
+
+Attack1 = random@0 * Decay2
+
+if wavePackIndexReadOnly = 0
+    is_melodic_selected = 0
+    while is_melodic_selected == 0
+        call generate_random_array
+        Bank_1 = random@0 * 8
+        Patch_1 = random@1 * 8
+        call is_melodic_selected
+    wend
+else
+    Bank_1 = random@1 * 8
+    Patch_1 = random@2 * 8
+endif
+Octave1 = random@3 * 2 + 2
+
+delay_sync_length_quarters = 3
+call delay_sync
+DlyFeed = random@4 * 0.3
+DlyFeed = DlyFeed + 0.2
+DlyWet = random@5 * 0.3
+DlyWet = DlyWet + 0.3
+
+FlngFrq = random@6 + 0.2
+FlngDly = random@7 + 0.1
+FlngWet = random@8 + 0.2
+FlngDpt = random@9 * 0.25
+
+#maxiter = random@10 * 3
+while #maxiter > 0
+    unison_change = 2
+    unison_change_multiplier = 1.5
+    call unison
+    #maxiter = #maxiter - 1
+wend
+UDetune = UDetune * (random@11 + 1)
+
+exit

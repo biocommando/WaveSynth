@@ -4,6 +4,7 @@
 #include "Scripts.h"
 #include "strrpl.h"
 #include "IniFileReader.h"
+#include "build_time.h"
 
 extern void WriteLog(const char*, double);
 
@@ -238,8 +239,8 @@ bool EditorGui::open(void* ptr)
 		newFrame->addView(banksAndPatches[i]);
 	}
 
-	CRect r(0, wSize->bottom - valueLabels[0]->getHeight(), wSize->right, wSize->bottom);
-	CTextLabel *label = new CTextLabel(r, "Little, ugly gnome - Wavetable synth - Joonas Salonpaa - 2016-2021");
+	CRect r(knobSize * 22 / 3, wSize->bottom - valueLabels[0]->getHeight(), wSize->right, wSize->bottom);
+	CTextLabel *label = new CTextLabel(r, "Little, ugly gnome - Wavetable synth - Joonas Salonpaa - 2016-2022 - build " BUILD_TIME);
 	newFrame->addView(label);
 	//macroCommands = (char*)malloc(1);
 	for (int i = 0; i < NUM_OF_MENUS; i++)
@@ -334,7 +335,7 @@ void MacroMenu::doMacroEdits(AEffGUIEditor *editor, long lastTweakedTag)
 	{
 		return;
 	}
-	AudioEffect *effect = editor->getEffect();
+	auto *effect = editor->getEffect();
 
 	if (cmd->script == "internal:lastTweakedToAll" && lastTweakedTag >= 0)
 	{
@@ -373,7 +374,7 @@ void MacroMenu::doMacroEdits(AEffGUIEditor *editor, long lastTweakedTag)
 				((WaveSynth*)effect)->getParameter(&dto, i);
 				((WaveSynth*)effect)->setParameter(&dto);
 
-				effect->getParameterName(i, name);
+				((WaveSynth*)effect)->getParameterName(i, name);
 				value = effect->getParameter(i);
 				type = TYPE_VST_FLOAT_PARAM;
 			}

@@ -1,0 +1,33 @@
+// Little, ugly gnome VST synth script file
+// Copyrights 2016 by Joonas Salonpaa
+
+sub unison
+	unison_change = unison_change / 32
+	orig_unison_count = Unison * 32
+	if orig_unison_count < 5
+		Unison = Unison + unison_change
+	else
+		Unison = Unison * unison_change_multiplier
+	endif
+
+	if Unison < 0
+		Unison = 0
+	endif
+	if Unison > 1
+		Unison = 1
+	endif
+
+	UDetune = (2 - 2 / (1 + Unison)) * 0.7
+
+	#temp = Unison * 32
+	if #temp <= 0
+		#temp = 1
+	endif
+	Level = 1 / #temp
+return
+
+entrypoint unison
+
+call unison
+
+exit

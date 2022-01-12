@@ -1,0 +1,15 @@
+// Little, ugly gnome VST synth script file
+// Copyrights 2016 by Joonas Salonpaa
+include $/legacy.js
+
+entrypoint transpose
+
+octave_index = 0
+for index in 1 to 3
+%	octave_index = Octave? * 7 * 0.99
+	octave_index = _truncate_
+	octave_index = octave_index + transpose_octave_direction
+%	Octave? = (octave_index + 0.5) / 7
+loop
+
+exit

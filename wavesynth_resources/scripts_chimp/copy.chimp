@@ -1,0 +1,17 @@
+// Little, ugly gnome VST synth script file
+// Copyrights 2016 by Joonas Salonpaa
+
+include $/copy_from_to.inc
+
+entrypoint copy
+
+if to < 4
+	call copy_from_to
+endif
+if to == 4
+	for to in 1 to 3
+		call copy_from_to
+	loop
+endif
+
+exit

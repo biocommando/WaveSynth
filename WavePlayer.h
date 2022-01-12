@@ -47,7 +47,6 @@ private:
 	BasicOscillator *LFO;
 	int LFOType;
 	double LFOFreq, LFOToFilter, LFOToPitch, LFOToLevel, LFOToCue;
-	void ResetWaveMemory();
 	void CreateBuffer(short *waveMemoryTemp, unsigned int waveLenTemp);
 	void StartPlay(double freqHz, int voice);
 	void StopPlay(int voice);

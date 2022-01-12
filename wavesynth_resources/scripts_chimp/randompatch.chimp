@@ -1,0 +1,15 @@
+// Little, ugly gnome VST synth script file
+// Copyrights 2016 by Joonas Salonpaa
+include $/legacy.js
+include $/random.inc
+
+entrypoint randompatch
+
+for index in 1 to 3
+call random
+%	Bank_? = random
+call random
+%	Patch_? = random
+loop
+
+exit

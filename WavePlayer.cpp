@@ -144,18 +144,6 @@ void WavePlayer::StopLoop(int voice)
 	voices[voice].isLooping = false;
 }
 
-void WavePlayer::ResetWaveMemory()
-{
-	/*if (waveLen)
-	{
-		setMemoryLock(true);
-		free(waveMemory);
-		waveMemory = NULL;
-		setMemoryLock(false);
-		waveLen = 0;
-	}*/
-}
-
 void WavePlayer::SetVoiceMode(int mode)
 {
 	if (mode != VCMODE_LOOP && mode != VCMODE_LOOP_WITH_RELEASE && mode != VCMODE_ONE_SHOT)

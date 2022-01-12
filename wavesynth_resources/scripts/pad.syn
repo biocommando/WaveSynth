@@ -16,45 +16,50 @@ Attack3 = #attack
 Attack2 = #attack * 0.5
 #LFORate = random * 0.3333
 for #index 1 to 3
-	Bank_? as_integer
-	Patch_? as_integer
-'	%is-melodic-selected = 0
-'	while %is-melodic-selected = 0
-'		Bank_? = random * 7
-'		Bank_? = Bank_? + 1
-'		Patch_? = random * 8
-'		call is-melodic-selected
-'	wend
-	Bank_? = random * 8
-	Patch_? = random * 8
-	#CutOff = random * 0.65
-	FCut_? = #CutOff + 0.15
-	FRes_? = 1 - FCut_?
-	Wavshp? = random * FRes_?
-	Wavshp? = Wavshp? * 0.5
-	while Wavshp? < 0.1
-		Wavshp? = random
-	wend
-	E2Cut_? = random
-	LFOShp? = random
-	LFOFrq? = #LFORate * #index
-	LFO2Pt? = random * 0.08
-	LFO2Cu? = random * 0.1
-	LFO2Fl? = random * 0.5
-	LFO2Fl? = LFO2Fl? * LFO2Fl?
-	LFO2Lv? = random * 0.5
-	LFO2Lv? = LFO2Lv? * LFO2Lv?
-	CuePos? = random * 0.1
-	#OctaveSpread = random * 0.42
-	Octave? = #OctaveSpread + 0.29
-	Decay? = random * 0.5
-	Decay? = Decay? + 0.1
-	Sust.? = random * 0.3
-	Sust.? = Sustain? + 0.3
-	Tail.? = Attack? * 0.5
-	Level_? = 1
-	Loop? as_integer
-	Loop? = 2
+    Bank_? as_integer
+    Patch_? as_integer
+    if wavePackIndexReadOnly = 0
+        %is-melodic-selected as_integer
+        %is-melodic-selected = 0
+        while %is-melodic-selected = 0
+            Bank_? = random * 7
+            Bank_? = Bank_? + 1
+            debug Bank_?
+            Patch_? = random * 8
+            call is-melodic-selected
+        wend
+    else
+        Bank_? = random * 8
+        Patch_? = random * 8
+    endif
+    #CutOff = random * 0.65
+    FCut_? = #CutOff + 0.15
+    FRes_? = 1 - FCut_?
+    Wavshp? = random * FRes_?
+    Wavshp? = Wavshp? * 0.5
+    while Wavshp? < 0.1
+        Wavshp? = random
+    wend
+    E2Cut_? = random
+    LFOShp? = random
+    LFOFrq? = #LFORate * #index
+    LFO2Pt? = random * 0.08
+    LFO2Cu? = random * 0.1
+    LFO2Fl? = random * 0.5
+    LFO2Fl? = LFO2Fl? * LFO2Fl?
+    LFO2Lv? = random * 0.5
+    LFO2Lv? = LFO2Lv? * LFO2Lv?
+    CuePos? = random * 0.1
+    #OctaveSpread = random * 0.42
+    Octave? = #OctaveSpread + 0.29
+    Decay? = random * 0.5
+    Decay? = Decay? + 0.1
+    Sust.? = random * 0.3
+    Sust.? = Sustain? + 0.3
+    Tail.? = Attack? * 0.5
+    Level_? = 1
+    Loop? as_integer
+    Loop? = 2
 loop
 
 ' *** global params ***

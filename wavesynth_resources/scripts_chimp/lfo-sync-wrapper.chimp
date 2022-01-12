@@ -1,0 +1,29 @@
+//' Little, ugly gnome VST synth script file
+//' Copyrights 2016 by Joonas Salonpaa
+
+include $/lfo-sync.inc
+include $/legacy.js
+
+entrypoint lfo-sync-wrapper
+
+// These can be undefined if they are not skipped
+def Synth_skip_1
+def Synth_skip_2
+def Synth_skip_3
+def Synth_skip_global
+
+for index in 1 to 3
+	resolve_question_mark Synth_skip_?
+	if Synth_skip_? == 0
+%		frequency = LFOFrq?
+		call lfo_sync
+%		LFOFrq? = output
+	endif
+loop
+if Synth_skip_global == 0
+	frequency = LfoFreq
+	call lfo_sync
+	LfoFreq = output
+endif
+
+exit

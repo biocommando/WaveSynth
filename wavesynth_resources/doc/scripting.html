@@ -18,7 +18,7 @@ Variable is truncated to integer.<br/><br/>
 <em>goto :[label]</em><br/><br/>
 Will seek to the position in the file that contains ":[label]".<br/><br/>
 <em>if [variable] [= < <= > >= <>]  [constant]</em><br/><br/>
-Does the defined test (note that the variable must exist and that the variable can only be compared to a constant). If the test doesn't succeed, the script will continue execution from the corresponding <strong>endif</strong> position. Else keyword is not supported yet.<br/><br/>
+Does the defined test (note that the variable must exist and that the variable can only be compared to a constant). If the test doesn't succeed, the script will continue execution from the corresponding <strong>endif</strong> or <strong>else</strong> position<br/><br/>
 <em>while [variable] [= < <= > >= <>]  [constant]</em><br/><br/>
 While the expression is true, a while loop will loop the section between while and <strong>wend</strong>. For nested loops you have to use the following syntax:<br/>
 @while [expression] [loop id]<br/>
@@ -77,7 +77,7 @@ title=Macros...
 title=Text for the menu item
 script=script-file-name-without-.syn-postfix
 
-[$script with parameters]
+[$script with two parameters]
 title=Text for the menu item
 script=script-file-name-without-.syn-postfix
 # parameters are defined in two steps:

@@ -9,21 +9,21 @@ call init-all
 #fenv = random * 0.7
 #fenv = #fenv + 0.3
 for #index 1 to 3
-	Loop? = 1
-	Bank_? as_integer
-	Patch_? as_integer
-	Octave? as_integer
-	LFOShp? as_integer
-	Wavshp? = #dist
-	Tail.? = #tail
-	
-	E2Cut_? = #fenv
-	FCut_? = #fenv * 0.3
-	FCut_? = FCut_? + 0.3
-	FRes_? = #fenv
-	if FRes_? > 0.88
-		FRes_? = 0.88
-	endif
+    Loop? = 1
+    Bank_? as_integer
+    Patch_? as_integer
+    Octave? as_integer
+    LFOShp? as_integer
+    Wavshp? = #dist
+    Tail.? = #tail
+    
+    E2Cut_? = #fenv
+    FCut_? = #fenv * 0.3
+    FCut_? = FCut_? + 0.3
+    FRes_? = #fenv
+    if FRes_? > 0.88
+        FRes_? = 0.88
+    endif
 loop
 
 #detune = 0.2 * random
@@ -34,27 +34,35 @@ Detune3 = 0.5 + #detune
 #sust = #sust + 0.3
 #sawlevel = 0.5 + random
 for #index 2 to 3
-	Bank_? = 7
-	Patch_? = 2
-	Octave? = #index
-	Pan_? = Detune?
-	Decay? = #tail * 0.5
-	Sust.? = #sust
-	Level_? = #sawlevel
+    Bank_? = 7
+    Patch_? = 2
+    if wavePackIndexReadOnly = 0
+        Bank_? = 0
+        Patch_? = 1
+    endif
+    Octave? = #index
+    Pan_? = Detune?
+    Decay? = #tail * 0.5
+    Sust.? = #sust
+    Level_? = #sawlevel
 loop
 
 
 Attack1 = random * Decay2
 
-'%is-melodic-selected as_integer
-'%is-melodic-selected = 0
-'while %is-melodic-selected = 0
-'	Bank_? = random * 8
-'	Patch_? = random * 8
-'	call is-melodic-selected
-'wend
-Bank_1 = random * 8
-Patch_1 = random * 8
+if wavePackIndexReadOnly = 0
+    %is-melodic-selected as_integer
+    %is-melodic-selected = 0
+    #index = 1
+    while %is-melodic-selected = 0
+        Bank_? = random * 8
+        Patch_? = random * 8
+        call is-melodic-selected
+    wend
+else
+    Bank_1 = random * 8
+    Patch_1 = random * 8
+endif
 Octave1 = random * 2
 Octave1 = Octave1 + 2
 
@@ -72,10 +80,10 @@ FlngDpt = random * 0.25
 
 #maxiter = random * 3
 while #maxiter > 0
-	%unison-change = 2
-	%unison-change-multiplier = 1.5
-	call unison
-	#maxiter = #maxiter - 1
+    %unison-change = 2
+    %unison-change-multiplier = 1.5
+    call unison
+    #maxiter = #maxiter - 1
 wend
 #temp = random + 1
 UDetune = UDetune * #temp

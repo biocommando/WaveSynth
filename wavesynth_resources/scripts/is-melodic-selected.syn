@@ -1,6 +1,7 @@
 ' Little, ugly gnome VST synth script file
 ' Copyrights 2016 by Joonas Salonpaa
 ' This code will verify if the selected Bank/Patch combination can be used as a melodic instrument.
+' Applies only to the "alternative" wavepack.
 ' #index must be set to the corresponding value in order to get this to work
 ' output: %is-melodic-selected, 1 if instrument can be used melodically, 0 otherwise
 

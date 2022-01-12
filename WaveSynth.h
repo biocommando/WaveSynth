@@ -32,12 +32,11 @@ private:
 		char longName[40], longPatchNames[8][40];
 		int numPatches;
 	}	banks[8];
-	WaveSynthSettings *settings = NULL;
+	WaveSynthSettings settings;
 	int numBanks = 0, sequence = 0, currentPack = 0;
 	int transactionCount = 0; // to avoid never ending loops
 	char *chunk = NULL, workDir[1024];
 	int randomSeed = 0;
-	void ReadSettings();
 	void ReadCCMappings();
 	void updateParams(int callerIndex = -1);
 	void GetBanksAndPatches();
@@ -50,7 +49,7 @@ private:
 public:
 	WaveSynth(audioMasterCallback audioMaster);
 	~WaveSynth();
-	void processReplacing(float **inputs, float **outputs, VstInt32 sampleFrames);
+	void processReplacing(float **inputs, float **outputs, VstInt32 sampleFrames) override;
 	float getParameter(VstInt32 index);
 	void setParameter(VstInt32 index, float value);
 	void getParameterName(VstInt32 index, char *label);
@@ -63,13 +62,13 @@ public:
 	int setParameter(ParamDTO *src); // returns param index
 	void getParameter(ParamDTO *dst, int index);
 	float getParameter(char *name);
-	VstInt32 processEvents(VstEvents* events);
+	VstInt32 processEvents(VstEvents* events) override;
 	void startTransaction();
 	void endTransaction();
 	bool isTransactionOver();
 	FILE *getMacroDefinitionFile();
 	void setSelectedPack(int packIndex);
-	int getSelectedPack() { return settings->getSelectedPackIndex(); }
+	int getSelectedPack() { return settings.getSelectedPackIndex(); }
 
 	VstInt32 getChunk(void** data, bool isPreset);
 	VstInt32 setChunk(void* data, VstInt32 byteSize, bool isPreset);
