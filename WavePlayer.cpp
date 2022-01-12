@@ -299,6 +299,12 @@ void WavePlayer::SetFilterValues(double cut, double res, double envToCutoff)
 	}
 }
 
+inline static double fastTanh(double x)
+{
+    const auto x2 = x * x;
+    return x * (27.0 + x2) / (27.0 + 9.0 * x2);
+}
+
 double WavePlayer::WaveShaping(int voice, double input)
 {
 	double voiceWaveShaping = waveShaping;
@@ -307,8 +313,9 @@ double WavePlayer::WaveShaping(int voice, double input)
 		voiceWaveShaping = (1 - (voices[voice].index - waveLoop2) / ((double)waveLen - waveLoop2)) * waveShaping;
 
 	double output = voiceWaveShaping * input;
-	if (output > 1) output = 1;
-	else if (output < -1) output = -1;
+	/*if (output > 1) output = 1;
+	else if (output < -1) output = -1;*/
+    output = fastTanh(output);
 	return output;
 }
 
