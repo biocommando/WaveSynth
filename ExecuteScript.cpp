@@ -2,6 +2,7 @@
 #include "WaveSynth.h"
 #include "strrpl.h"
 #include "SimpleScript.h"
+#include "PresetLoader.h"
 
 extern void WriteLog(const char*, double = 0);
 
@@ -383,13 +384,34 @@ std::vector<ParamDTO> ExecuteScript(const std::string &filename, std::vector<Scr
 
 	std::string intParams;
 
-	const auto notify = [&variables, &intParams](const std::vector<std::string> & sv)
+	PresetLoader ploader;
+
+	const auto notify = [&](const std::vector<std::string> & sv)
 	{
 		if (sv.size() > 1 && sv[0] == "params_are_integers")
 		{
 			for (const auto& s : sv)
 			{
 				intParams = intParams + "{" + s + "}";
+			}
+		}
+		else if (sv.size() >= 2 && sv[0] == "preset_lookup")
+		{
+			if (sv[1] == "preset_count")
+			{
+				ploader.readPresets();
+				variables["preset_count"] = ploader.getPresets().size();
+			}
+			else if (sv[1] == "load_preset")
+			{
+				int wavePack;
+				auto params = ploader.loadPreset(variables["load_preset_number"], &wavePack);
+				for (auto& param : params)
+				{
+					auto name = std::string("load_") + param.id;
+					variables[name] = param.floatValue;
+				}
+				variables["load_wave_pack"] = wavePack;
 			}
 		}
 	};
