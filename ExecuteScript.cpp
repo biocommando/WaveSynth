@@ -3,6 +3,9 @@
 #include "strrpl.h"
 #include "SimpleScript.h"
 #include "PresetLoader.h"
+#include "util.h"
+#include <fstream>
+
 
 extern void WriteLog(const char*, double = 0);
 
@@ -364,7 +367,71 @@ void _ExecuteScript(const std::string &filename, std::vector<ScriptVariable> &va
 	fclose(script);
 }
 
-std::vector<ParamDTO> ExecuteScript(const std::string &filename, std::vector<ScriptVariable> &initial)
+std::vector<ParamDTO> ExecuteScript(const std::string& filename, std::vector<ScriptVariable>& initial)
+{
+	extern void getWorkDir(char*);
+	char ipcFilename[1024];
+	getWorkDir(ipcFilename);
+	sprintf(ipcFilename, "%splugins\\wavesynth-param-transfer.dat", ipcFilename);
+	std::ofstream ofs;
+	ofs.open(ipcFilename, std::ios_base::out);
+	for (const auto& v : initial)
+	{
+		if (v.type != 'e')
+			ofs << v.name << ' ' << v.value << '\n';
+	}
+	ofs.close();
+
+	auto ret = system((filename + " \"" + ipcFilename + "\"").c_str());
+	
+	std::vector<ParamDTO> dtos;
+	if (ret != 0)
+		return dtos;
+
+	std::ifstream ifs;
+	ifs.open(ipcFilename, std::ios_base::out);
+
+	for (std::string s; std::getline(ifs, s);)
+	{
+		const auto v = Util::splitString(s, ' ');
+		if (v.size() == 2)
+		{
+			ParamDTO dto;
+			auto name = v[0];
+			bool isIntParam = false;
+			if (v[0].front() == '*')
+			{
+				name = name.substr(1);
+				isIntParam = true;
+			}
+			const auto fval = std::stof(v[1]);
+			dto.create(name.c_str(), fval);
+			WriteLog(dto.id, dto.floatValue);
+			if (isIntParam)
+			{
+				dto.intValue = static_cast<int>(fval);
+			}
+			dtos.push_back(dto);
+		}
+	}
+
+
+
+	/*for (const auto& v : initial)
+	{
+		ParamDTO dto;
+		auto val = variables[v.name];
+		dto.create(v.name.c_str(), (float)val);
+		if (intParams.find('{' + v.name + '}') != std::string::npos)
+		{
+			dto.intValue = (int)val;
+		}
+		dtos.push_back(dto);
+	}*/
+	return dtos;
+}
+
+std::vector<ParamDTO> __ExecuteScript(const std::string &filename, std::vector<ScriptVariable> &initial)
 {
 	static bool srandDone = false;
 	if (!srandDone)

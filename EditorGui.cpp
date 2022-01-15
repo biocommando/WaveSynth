@@ -360,7 +360,7 @@ void MacroMenu::doMacroEdits(AEffGUIEditor *editor, long lastTweakedTag)
 		extern void getWorkDir(char*);
 		char filename[1024];
 		getWorkDir(filename);
-		sprintf(filename, "%sscripts_chimp\\output\\%s.script", filename, cmd->script.c_str()); // % s.syn", filename, cmd->script.c_str());
+		sprintf(filename, "%splugins\\%s", filename, cmd->script.c_str()); // % s.syn", filename, cmd->script.c_str());
 		std::vector<ScriptVariable> initial;
 		for (int i = 0; i < NUM_PARAMS + 5; i++)
 		{
