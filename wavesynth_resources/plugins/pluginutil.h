@@ -88,7 +88,7 @@ void read_ipc_data(const char *filename)
     fclose(f);
 }
 
-void save_ipc_data(const char **argv)
+void save_ipc_data(char **argv)
 {
     if (!init)
         return;

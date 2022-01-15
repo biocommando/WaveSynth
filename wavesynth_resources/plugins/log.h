@@ -27,7 +27,7 @@ const char log_lev_map[][6] = {"TRACE", "INFO ", "ERROR"};
 
 void log_write(const char *file, int line, int level)
 {
-    if (LOG_LEVEL < level || (LOG_FILTER[0] && strcmp(LOG_FILTER, file)))
+    if (LOG_LEVEL > level || (LOG_FILTER[0] && strcmp(LOG_FILTER, file)))
         return;
     if (!log_file_handle)
         return;
@@ -35,6 +35,9 @@ void log_write(const char *file, int line, int level)
     pad[sizeof(pad) - strlen(file) > 0 ? sizeof(pad) - strlen(file) : 0] = 0;
     fprintf(log_file_handle, "[%s%s |%4d] %s %s\n",
             pad, file, line, log_lev_map[level % 3], log_buffer);
+#ifdef CONSOLE_LOGGING
+    printf("%s\n", log_buffer);
+#endif
 }
 
 void log_lifecycle(const char *ipc_file)
