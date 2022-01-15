@@ -45,9 +45,6 @@
     <ClInclude Include="WaveSynthConsts.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Scripts.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Saturation.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -90,6 +87,12 @@
     <ClInclude Include="util.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Plugins.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ExternalPluginExecutor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BasicOscillator.cpp">
@@ -114,9 +117,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="BasicDelay.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ExecuteScript.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Saturation.cpp">
@@ -159,6 +159,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\fst\VSTGui\vstgui.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ExecutePlugin.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

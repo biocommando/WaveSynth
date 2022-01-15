@@ -88,15 +88,17 @@ void read_ipc_data(const char *filename)
     fclose(f);
 }
 
-void save_ipc_data(const char *filename)
+void save_ipc_data(const char **argv)
 {
     if (!init)
         return;
-    FILE *f = fopen(filename, "w");
+    FILE *f = fopen(argv[1], "w");
     FOR_EACH_PARAMETER(i)
     {
         fprintf(f, "%s %lf\n", parameters[i].name, parameters[i].value);
     }
+    fprintf(f, "#debug_data_program_name %s\n", argv[0]);
+    fprintf(f, "#debug_data_ipc_file_full_path %s\n", argv[1]);
     fclose(f);
 }
 
@@ -109,7 +111,7 @@ void save_ipc_data(const char *filename)
     read_ipc_data(argv[1])
 
 #define FINALIZE            \
-    save_ipc_data(argv[1]); \
+    save_ipc_data(argv); \
     log_lifecycle(NULL);    \
     return 0
 

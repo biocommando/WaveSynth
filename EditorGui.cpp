@@ -1,7 +1,7 @@
 #include "EditorGui.h"
 #include "Resource.h"
 #include "WaveSynth.h"
-#include "Scripts.h"
+#include "Plugins.h"
 #include "strrpl.h"
 #include "IniFileReader.h"
 #include "build_time.h"
@@ -29,7 +29,7 @@ EditorGui::~EditorGui()
 {
 }
 
-MacroMenu::MacroMenu(const CRect &size, CControlListener *listener, long tag)
+MacroMenu::MacroMenu(const CRect& size, CControlListener* listener, long tag)
 	: COptionMenu(size, listener, tag)
 {
 }
@@ -66,7 +66,7 @@ void EditorGui::SetValueLabelText(int index)
 	valueLabels[index]->setText(text);
 }
 
-void EditorGui::fillMacroMenu(MacroMenu *menu, int tag)
+void EditorGui::fillMacroMenu(MacroMenu* menu, int tag)
 {
 	IniFileReader reader;
 	reader.openFile(((WaveSynth*)effect)->getMacroDefinitionFile());
@@ -102,7 +102,7 @@ void EditorGui::fillMacroMenu(MacroMenu *menu, int tag)
 				macro.script = macroScript;
 			}
 			int paramIdx = 0;
-			while(1)
+			while (1)
 			{
 				char variable[32] = "";
 				char value[32] = "";
@@ -138,16 +138,16 @@ bool EditorGui::open(void* ptr)
 {
 	CRect frameSize(0, 0, knobSize * SET_PARAMS_COUNT, knobSize * ((NUM_PARAM_SETS + 1) * 2 + 1) + knobSize / 2);
 	CColor cBg = kWhiteCColor, cFg = { 4, 87, 128, 255 };
-	ERect *wSize;
+	ERect * wSize;
 	getRect(&wSize);
 	wSize->top = wSize->left = 0;
 	wSize->bottom = (VstInt16)frameSize.bottom;
 	wSize->right = (VstInt16)frameSize.right;
-	CFrame* newFrame = new CFrame(frameSize, ptr, this);
+	CFrame * newFrame = new CFrame(frameSize, ptr, this);
 	newFrame->setBackgroundColor(cBg);
 
 	//-- load some bitmaps we need
-	CBitmap *background, *backgrounds[10];
+	CBitmap * background, *backgrounds[10];
 	backgrounds[0] = new CBitmap(IDB_BG_WAVEFORM);
 	backgrounds[1] = new CBitmap(IDB_BG_DISTORTION);
 	backgrounds[2] = new CBitmap(IDB_BG_ENVELOPE);
@@ -159,7 +159,7 @@ bool EditorGui::open(void* ptr)
 	backgrounds[8] = new CBitmap(IDB_BG_PAN);
 	backgrounds[9] = new CBitmap(IDB_BG_BLANK);
 	background = backgrounds[0];
-	CBitmap* handle = new CBitmap(IDB_HANDLE);
+	CBitmap * handle = new CBitmap(IDB_HANDLE);
 	int controlIndex = 0, firstGlobalParam = P_SET(NUM_PARAM_SETS - 1, SET_PARAMS_COUNT);
 	for (int oscid = 0; oscid < NUM_PARAM_SETS + 1; oscid++)
 	{
@@ -193,10 +193,10 @@ bool EditorGui::open(void* ptr)
 				background = backgrounds[7];
 			else if (i == P_PAN)
 				background = backgrounds[8];
-			CKnob* knob = new CKnob(r, this, controlIndex, background, handle, CPoint(0, 0));
+			CKnob * knob = new CKnob(r, this, controlIndex, background, handle, CPoint(0, 0));
 			newFrame->addView(knob);
 			controls[controlIndex] = knob;
-			CTextLabel *label;// = new CTextLabel(r_label, longParamNames[i]);
+			CTextLabel * label;// = new CTextLabel(r_label, longParamNames[i]);
 			if (controlIndex < firstGlobalParam)
 			{
 				label = new CTextLabel(r_label, longParamNames[i]);
@@ -214,7 +214,7 @@ bool EditorGui::open(void* ptr)
 				label->setFontColor(cFg);
 			}
 			newFrame->addView(label);
-			CTextLabel *label2 = new CTextLabel(r_valueLabel, "");
+			CTextLabel* label2 = new CTextLabel(r_valueLabel, "");
 			label2->setBackColor(cBg);
 			label2->setFrameColor(cBg);
 			label2->setFontColor(cFg);
@@ -240,7 +240,7 @@ bool EditorGui::open(void* ptr)
 	}
 
 	CRect r(knobSize * 22 / 3, wSize->bottom - valueLabels[0]->getHeight(), wSize->right, wSize->bottom);
-	CTextLabel *label = new CTextLabel(r, "Little, ugly gnome - Wavetable synth - Joonas Salonpaa - 2016-2022 - build " BUILD_TIME);
+	CTextLabel * label = new CTextLabel(r, "Little, ugly gnome - Wavetable synth - Joonas Salonpaa - 2016-2022 - build " BUILD_TIME);
 	newFrame->addView(label);
 	//macroCommands = (char*)malloc(1);
 	for (int i = 0; i < NUM_OF_MENUS; i++)
@@ -300,22 +300,6 @@ void EditorGui::close()
 	delete oldFrame;
 }
 
-std::vector<std::string> splitString(const std::string& s, char c)
-{
-	std::vector<std::string> ret;
-	int pos = 0;
-	do {
-		auto pos0 = pos;
-		pos = s.find(c, pos);
-		if (pos != std::string::npos)
-		{
-			ret.push_back(s.substr(pos0, pos - pos0));
-			pos++;
-		}
-	} while(pos != std::string::npos);
-	return ret;
-}
-
 MacroCommand* MacroMenu::getCurrentCommand()
 {
 	for (int i = 0; i < macroCommands.size(); i++)
@@ -328,14 +312,21 @@ MacroCommand* MacroMenu::getCurrentCommand()
 	return nullptr;
 }
 
-void MacroMenu::doMacroEdits(AEffGUIEditor *editor, long lastTweakedTag)
+#define ADD_PLUGIN_PARAM()											\
+	do																\
+	{																\
+		PluginVariable var = { type, std::string(name), value };	\
+		initial.push_back(var);										\
+	} while(0)
+
+void MacroMenu::doMacroEdits(AEffGUIEditor * editor, long lastTweakedTag)
 {
 	auto cmd = getCurrentCommand();
 	if (cmd == nullptr)
 	{
 		return;
 	}
-	auto *effect = editor->getEffect();
+	auto* effect = editor->getEffect();
 
 	if (cmd->script == "internal:lastTweakedToAll" && lastTweakedTag >= 0)
 	{
@@ -361,63 +352,44 @@ void MacroMenu::doMacroEdits(AEffGUIEditor *editor, long lastTweakedTag)
 		char filename[1024];
 		getWorkDir(filename);
 		sprintf(filename, "%splugins\\%s", filename, cmd->script.c_str()); // % s.syn", filename, cmd->script.c_str());
-		std::vector<ScriptVariable> initial;
-		for (int i = 0; i < NUM_PARAMS + 5; i++)
+		std::vector<PluginVariable> initial;
+		char name[100];
+		char type = TYPE_TEMPORARY;
+		float value;
+		for (int i = 0; i < NUM_PARAMS; i++)
 		{
-			char name[100];
-			char type = TYPE_TEMPORARY;
-			float value;
-			if (i < NUM_PARAMS)
-			{
-				// this will set the default float value to all integer parameters 
-				ParamDTO dto;
-				((WaveSynth*)effect)->getParameter(&dto, i);
-				((WaveSynth*)effect)->setParameter(&dto);
+			// this will set the default float value to all integer parameters 
+			ParamDTO dto;
+			((WaveSynth*)effect)->getParameter(&dto, i);
+			((WaveSynth*)effect)->setParameter(&dto);
 
-				((WaveSynth*)effect)->getParameterName(i, name);
-				value = effect->getParameter(i);
-				type = TYPE_VST_FLOAT_PARAM;
-			}
-			else if (i == NUM_PARAMS)
-			{
-				strcpy(name, "tempo");
-				VstTimeInfo *timeInfo = ((WaveSynth*)effect)->getTimeInfo(kVstTempoValid);
-				value = (float)timeInfo->tempo;
-			}
-			else if (i == NUM_PARAMS + 1)
-			{
-				strcpy(name, "randomSeed");
-				value = -1;
-			}
-			else if (i == NUM_PARAMS + 2)
-			{
-				strcpy(name, "wavePackIndexReadOnly");
-				value = ((WaveSynth*)effect)->getSelectedPack();
-			}
-			
-			if (i == NUM_PARAMS + 3)
-			{
-				//auto vars = splitString(otherScriptVariables, '>');
-				for (int i = 0; i < cmd->params.size(); i++)
-				{
-					auto param = &cmd->params[i];
-					ScriptVariable var = { TYPE_TEMPORARY, param->name, param->value };
-					initial.push_back(var);
-				}
-			}
-			else if (i == NUM_PARAMS + 4)
-			{
-				strcpy(name, cmd->script.c_str());
-				ScriptVariable var = { 'e', cmd->script, 0 };
-				initial.push_back(var);
-			}
-			else
-			{
-				ScriptVariable var = { type, std::string(name), value };
-				initial.push_back(var);
-			}
+			((WaveSynth*)effect)->getParameterName(i, name);
+			value = effect->getParameter(i);
+			ADD_PLUGIN_PARAM();
 		}
-		auto dtos = ExecuteScript(filename, initial);
+
+		strcpy(name, "tempo");
+		VstTimeInfo* timeInfo = ((WaveSynth*)effect)->getTimeInfo(kVstTempoValid);
+		value = (float)timeInfo->tempo;
+		ADD_PLUGIN_PARAM();
+
+		strcpy(name, "randomSeed");
+		value = -1;
+		ADD_PLUGIN_PARAM();
+
+		strcpy(name, "wavePackIndexReadOnly");
+		value = ((WaveSynth*)effect)->getSelectedPack();
+		ADD_PLUGIN_PARAM();
+
+		for (int i = 0; i < cmd->params.size(); i++)
+		{
+			auto param = &cmd->params[i];
+			strcpy(name, param->name.c_str());
+			value = param->value;
+			ADD_PLUGIN_PARAM();
+		}
+
+		auto dtos = ExecutePlugin(filename, initial);
 
 		for (int i = 0; i < dtos.size(); i++)
 		{
@@ -438,7 +410,7 @@ void EditorGui::valueChanged(int index)
 }
 
 //------------------------------------------------------------------------------------
-void EditorGui::valueChanged(CControl* pControl)
+void EditorGui::valueChanged(CControl * pControl)
 {
 	long tag = pControl->getTag();
 	if (tag >= MENU_1_ID && tag <= MENU_3_ID)

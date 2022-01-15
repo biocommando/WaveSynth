@@ -186,6 +186,7 @@
     <ClInclude Include="BasicDelay.h" />
     <ClInclude Include="BasicFilter.h" />
     <ClInclude Include="BasicOscillator.h" />
+    <ClInclude Include="ExternalPluginExecutor.h" />
     <ClInclude Include="Filter.h" />
     <ClInclude Include="ParamDto.h" />
     <ClInclude Include="PredictableRandom.h" />
@@ -201,7 +202,7 @@
     <ClInclude Include="MS20Filter.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Saturation.h" />
-    <ClInclude Include="Scripts.h" />
+    <ClInclude Include="Plugins.h" />
     <ClInclude Include="strrpl.h" />
     <ClInclude Include="WaveSynth.h" />
     <ClInclude Include="WaveSynthConsts.h" />
@@ -221,7 +222,7 @@
     <ClCompile Include="WavePlayer.cpp" />
     <ClCompile Include="CChangeEvents.cpp" />
     <ClCompile Include="EditorGui.cpp" />
-    <ClCompile Include="ExecuteScript.cpp" />
+    <ClCompile Include="ExecutePlugin.cpp" />
     <ClCompile Include="Flanger.cpp" />
     <ClCompile Include="IniFileReader.cpp" />
     <ClCompile Include="MacroCache.cpp" />
