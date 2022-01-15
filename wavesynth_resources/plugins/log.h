@@ -5,76 +5,72 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef LOG_FILE
-struct logevent
-{
-    char str[1024];
-};
+// Log global parameter definitions
 
-#define LOG(evt) do_log(evt, __FILE__, __LINE__)
-
-#define STR1(str) get_logevent(str)
-
-#define STR(evt, str2) get_logevent_s(evt, str2)
-#define STR2(str, str2) get_logevent_s(STR1(str), str2)
-#define INT(evt, i) get_logevent_i(evt, i)
-#define DBL(evt, d) get_logevent_d(evt, d)
-
-void do_log(struct logevent evt, const char *file, int line)
-{
-    static int init = 0;
-    FILE *f = fopen(LOG_FILE, "a");
-    if (!init)
-        fprintf(f, "--- Plugin init ---\n");
-    init = 1;
-    fprintf(f, "line %d: file %s: %s\n", line, file, evt.str);
-    fclose(f);
-}
-
-struct logevent get_logevent(const char *str)
-{
-    struct logevent evt;
-    strcpy(evt.str, str);
-    return evt;
-}
-
-struct logevent get_logevent_s(struct logevent evt, const char *str)
-{
-    strcat(evt.str, " ");
-    strcat(evt.str, str);
-    return evt;
-}
-
-struct logevent get_logevent_i(struct logevent evt, int i)
-{
-    char val[20];
-    sprintf(val, " %d", i);
-    strcat(evt.str, val);
-    return evt;
-}
-
-struct logevent get_logevent_d(struct logevent evt, double d)
-{
-    char val[20];
-    sprintf(val, " %lf", d);
-    strcat(evt.str, val);
-    return evt;
-}
-
-#ifdef ENABLE_LOG_TRACE
-#define LOG_TRACE(evt) LOG(evt)
-#else
-#define LOG_TRACE(a)
+#define LOG_LEVEL_TRACE 0
+#define LOG_LEVEL_INFO 1
+#define LOG_LEVEL_ERROR 2
+#ifndef LOG_FILTER
+#define LOG_FILTER ""
+#endif
+#ifndef LOG_LEVEL
+#define LOG_LEVEL LOG_LEVEL_INFO
 #endif
 
-#else
-#define LOG(a)
-#define LOG_TRACE(a)
-#define STR1(str)
+// Logging state
 
-#define STR(evt, str2)
-#define STR2(str, str2)
-#define INT(evt, i)
-#define DBL(evt, d)
-#endif
+char log_buffer[1024] = "";
+FILE *log_file_handle = NULL;
+const char log_lev_map[][6] = {"TRACE", "INFO ", "ERROR"};
+
+// Actual logging implementation
+
+void log_write(const char *file, int line, int level)
+{
+    if (LOG_LEVEL < level || (LOG_FILTER[0] && strcmp(LOG_FILTER, file)))
+        return;
+    if (!log_file_handle)
+        return;
+    char pad[] = "                ";
+    pad[sizeof(pad) - strlen(file) > 0 ? sizeof(pad) - strlen(file) : 0] = 0;
+    fprintf(log_file_handle, "[%s%s |%4d] %s %s\n",
+            pad, file, line, log_lev_map[level % 3], log_buffer);
+}
+
+void log_lifecycle(const char *ipc_file)
+{
+    if (ipc_file)
+    {
+        if (!log_file_handle)
+        {
+            strcpy(log_buffer, ipc_file);
+            for (int i = strlen(log_buffer) - 1; log_buffer[i] != '\\' && log_buffer[i] != '/'; i--)
+                log_buffer[i] = 0;
+            strcat(log_buffer, "log.txt");
+            log_file_handle = fopen(log_buffer, "a");
+            fprintf(log_file_handle, "--- Plugin init ---\n");
+            fprintf(log_file_handle, "Log init: level='%s', filter='%s'\n",
+                    log_lev_map[LOG_LEVEL % 3], LOG_FILTER);
+        }
+    }
+    else
+    {
+        fclose(log_file_handle);
+        log_file_handle = NULL;
+    }
+}
+
+// Logging macros, use LOG_TRACE, LOG and LOG_ERROR for logging in source files
+
+#define DO_LOG(level, ...)                    \
+    do                                        \
+    {                                         \
+        sprintf(log_buffer, __VA_ARGS__);     \
+        log_write(__FILE__, __LINE__, level); \
+    } while (0)
+
+#define LOG_TRACE(...) DO_LOG(LOG_LEVEL_TRACE, __VA_ARGS__)
+#define LOG(...) DO_LOG(LOG_LEVEL_INFO, __VA_ARGS__)
+#define LOG_ERROR(...) DO_LOG(LOG_LEVEL_ERROR, __VA_ARGS__)
+
 #endif

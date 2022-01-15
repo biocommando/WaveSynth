@@ -1,4 +1,3 @@
-//#define LOG_FILE "D:\\code\\c\\WaveSynth\\TestVST\\wavesynth_resources\\plugins\\log.txt"
 #include "lfo_sync.h"
 
 PLUGIN()
@@ -16,13 +15,11 @@ PLUGIN()
         {
             double frequency = PQ("LFOFrq?");
             PQ("LFOFrq?") = lfo_sync(frequency, P(noteDivision));
-            LOG(INT(STR1("Sync LFO"), pindex));
         }
     }
     if (global_skip == 0)
     {
         double frequency = P(LfoFreq);
         P(LfoFreq) = lfo_sync(frequency, P(noteDivision));
-        LOG(STR1("Sync global LFO"));
     }
 }

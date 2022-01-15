@@ -15,7 +15,7 @@ void qmarkrpl(char *out, const char *in)
         if (out[i] == '?')
             out[i] = '0' + pindex;
     }
-    LOG(STR2("Resolved ? notation to", out));
+    LOG_TRACE("Resolved %s notation to %s", in, out);
 }
 
 Parameter *get_pqmark_ptr(const char *name)
@@ -45,7 +45,7 @@ int num_int_params = 0;
 void param_as_integer(const char *name)
 {
     int_params[num_int_params] = get_parameter_ptr(name);
-    LOG(STR2("Marked param as integer", name));
+    LOG_TRACE("Marked param %s as integer", name);
     num_int_params++;
 }
 
@@ -71,6 +71,7 @@ void mark_interger_params()
             char buf[64];
             strcpy(buf, int_params[i]->name);
             sprintf(int_params[i]->name, "*%s", buf);
+            LOG_TRACE("Integer param '%s' saved with new name '%s'", buf, int_params[i]->name);
         }
     }
 }

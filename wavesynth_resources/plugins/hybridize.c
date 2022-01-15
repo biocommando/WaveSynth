@@ -1,11 +1,9 @@
-/*#define LOG_FILE "D:\\code\\c\\WaveSynth\\TestVST\\wavesynth_resources\\plugins\\log.txt"
-//#define ENABLE_LOG_TRACE*/
 #include "pluginutil.h"
 
 int main(MAIN_ARGS)
 {
-    LOG(STR2("Init", argv[0]));
     INIT;
+    LOG("Initialized plugin %s", argv[0]);
 
     char path[2048];
     strcpy(path, argv[1]);
@@ -14,7 +12,7 @@ int main(MAIN_ARGS)
         path[i] = 0;
     }
     
-    LOG(STR2("Base path", path));
+    LOG("Base path = %s", path);
 
     Parameter p_orig[MAX_NUM_PARAMS];
     memcpy(p_orig, parameters, sizeof(parameters));
@@ -22,7 +20,7 @@ int main(MAIN_ARGS)
     int type = P(type);
     double hybridize_amount = P(hybridize_amount);
 
-    LOG(INT(STR1("Type"), type));
+    LOG("Type = %d", type);
 
     if (type == 0)
         strcat(path, "pad.exe");
@@ -36,15 +34,16 @@ int main(MAIN_ARGS)
     strcat(path, " ");
     strcat(path, argv[1]);
 
-    LOG(STR2("Path is", path));
+    LOG("Path is %s", path);
 
     if (system(path) != 0)
         return -1;
-    LOG(STR1("Sys call done"));
+
+    LOG("Sys call done");
 
     INIT;
 
-    LOG(STR1("new init done"));
+    LOG("new init done");
     for (int i = 0; p_orig[i].name[0]; i++)
     {
         // Skip waveforms
@@ -66,6 +65,6 @@ int main(MAIN_ARGS)
         double new_val = orig_val * (1 - hybridize_amount) + (gen_val + orig_val) * hybridize_amount / 2;
         p->value = new_val;
     }
-    LOG(STR1("Finalizing work"));
+    LOG("Finalizing work");
     FINALIZE;
 }
