@@ -16,11 +16,11 @@ FstAudioEffect* createFstInstance(audioMasterCallback audioMaster)
 
 bool loggingOn = true;
 // same as above but persists the file until it is unloaded... this can be used when a faster logwrite is needed
-void WriteLogPersist(const char *msg, double val = 0, bool unLoad = false)
+void WriteLogPersist(const char* msg, double val = 0, bool unLoad = false)
 {
 	if (!loggingOn) return;
 	static int event_id = 0;
-	static FILE *log = NULL;
+	static FILE* log = NULL;
 	char mode[2] = "a";
 	if (event_id == 0) mode[0] = 'w';
 	if (log == NULL)
@@ -34,12 +34,12 @@ void WriteLogPersist(const char *msg, double val = 0, bool unLoad = false)
 		log = NULL;
 	}
 }
-void WriteLog(const char *msg, double val = 0)
+void WriteLog(const char* msg, double val = 0)
 {
 	WriteLogPersist(msg, val, true);
 }
 
-void getWorkDir(char *workDir)
+void getWorkDir(char* workDir)
 {
 	auto dir = Util::getWorkDir(true);
 	if (dir.back() != '\\')
@@ -71,7 +71,7 @@ void WaveSynth::open()
 	randomSeed = (int)time(NULL);
 	predictableRandom = new PredictableRandom();
 	predictableRandom->seed(randomSeed);
-	
+
 	GetBanksAndPatches();
 
 	oversampling = settings.getOversampling();
@@ -236,7 +236,7 @@ bool WaveSynth::isTransactionOver()
 
 void WaveSynth::ReadCCMappings()
 {
-	IniFileReader *reader = new IniFileReader();
+	IniFileReader* reader = new IniFileReader();
 	reader->openFile(settings.getMidiMapDefinitionFile());
 	int mapIdx = 0;
 	while (1)
@@ -371,7 +371,7 @@ VstInt32 WaveSynth::setChunk(void* data, VstInt32 byteSize, bool isPreset)
 
 	unsigned short version;
 	unsigned int dataOffset = 0;
-	char *ptr = chunk;
+	char* ptr = chunk;
 	int offset = 0;
 	if (byteSize < 2 + sizeof(unsigned short) || !(chunk[0] == 'v' && chunk[1] == 'i'))
 	{
@@ -423,7 +423,7 @@ VstInt32 WaveSynth::setChunk(void* data, VstInt32 byteSize, bool isPreset)
 }
 
 
-int WaveSynth::setParameter(ParamDTO *src)
+int WaveSynth::setParameter(ParamDTO * src)
 {
 	startTransaction();
 	if (!strcmp(src->id, "randomSeed") && src->floatValue >= 0)
@@ -450,7 +450,7 @@ int WaveSynth::setParameter(ParamDTO *src)
 	return -1;
 }
 
-float WaveSynth::getParameter(char *name)
+float WaveSynth::getParameter(char* name)
 {
 	for (int i = 0; i < NUM_PARAMS; i++)
 	{
@@ -463,9 +463,9 @@ float WaveSynth::getParameter(char *name)
 }
 
 
-void WaveSynth::getParameter(ParamDTO *dst, int index)
+void WaveSynth::getParameter(ParamDTO * dst, int index)
 {
-	MinimalParameter *p = params[index];
+	MinimalParameter* p = params[index];
 	if (p->IsSelection())
 		dst->intValue = p->GetSelection();
 	else
@@ -476,7 +476,7 @@ void WaveSynth::getParameter(ParamDTO *dst, int index)
 	strcpy(dst->id, p->name);
 }
 
-void WaveSynth::setWaveFileOffset(FILE *waves, int bank, int patch)
+void WaveSynth::setWaveFileOffset(FILE * waves, int bank, int patch)
 {
 	unsigned long offset = (bank * 8 + patch) * sizeof(unsigned long);
 	fseek(waves, offset, SEEK_SET);
@@ -484,7 +484,7 @@ void WaveSynth::setWaveFileOffset(FILE *waves, int bank, int patch)
 	fseek(waves, offset, SEEK_SET);
 }
 
-void WaveSynth::ChangePatch(WavePlayer *osc, MinimalParameter *pBank, MinimalParameter *pPatch)
+void WaveSynth::ChangePatch(WavePlayer * osc, MinimalParameter * pBank, MinimalParameter * pPatch)
 {
 	bool readNewWave = false;
 	startTransaction();
@@ -512,7 +512,7 @@ void WaveSynth::ChangePatch(WavePlayer *osc, MinimalParameter *pBank, MinimalPar
 		char temp[256], pack[256];
 		settings.getPack(settings.getSelectedPackIndex(), pack);
 		sprintf(temp, "%s%s", workDir, pack);
-		FILE *allWaves = fopen(temp, "rb");
+		FILE* allWaves = fopen(temp, "rb");
 		setWaveFileOffset(allWaves, pBank->tag, pPatch->tag);
 		osc->ReadFile(allWaves);
 		fclose(allWaves);
@@ -520,10 +520,10 @@ void WaveSynth::ChangePatch(WavePlayer *osc, MinimalParameter *pBank, MinimalPar
 	endTransaction();
 }
 
-void WaveSynth::ReplaceStr(char *str, char replaceWhat, char replacement)
+void WaveSynth::ReplaceStr(char* str, char replaceWhat, char replacement)
 {
-	for (char *c = str; *c != 0; c++)
-		if (*c == replaceWhat) *c = replacement;
+	for (char* c = str; *c != 0; c++)
+		if (*c == replaceWhat) * c = replacement;
 }
 
 FILE * WaveSynth::getMacroDefinitionFile()
@@ -536,7 +536,7 @@ void WaveSynth::GetBanksAndPatches() {
 	char bankId[256];
 	currentPack = settings.getSelectedPackIndex();
 	settings.getPackId(currentPack, bankId);
-	IniFileReader *reader = new IniFileReader();
+	IniFileReader* reader = new IniFileReader();
 	reader->openFile(settings.getBankDefinitionFile());
 	char temp[256];
 	sprintf(temp, "%s:banks", bankId);
@@ -634,17 +634,17 @@ void WaveSynth::setParameter(VstInt32 index, float value)
 	if (isTransactionOver())
 		((EditorGui*)(this->editor))->setParameter(index, value);
 }
-void WaveSynth::getParameterName(VstInt32 index, char *label)
+void WaveSynth::getParameterName(VstInt32 index, char* label)
 {
 	if (index >= NUM_PARAMS)
 		return;
 	strcpy_s(label, 8, params[index]->name);
 }
-void WaveSynth::getParameterDisplay(VstInt32 index, char *text)
+void WaveSynth::getParameterDisplay(VstInt32 index, char* text)
 {
 	params[index]->GetDisplayText(text, 8);
 }
-void WaveSynth::getParameterLabel(VstInt32 index, char *label)
+void WaveSynth::getParameterLabel(VstInt32 index, char* label)
 {
 	strcpy_s(label, 8, params[index]->label);
 }
@@ -663,20 +663,20 @@ bool WaveSynth::getVendorString(char* text)
 	strcpy_s(text, 64, "(c) 2016-2022 Joonas Salonpaa");
 	return true;
 }
-void WaveSynth::getBankAndPatchName(char *buff, double bank, double patch)
+void WaveSynth::getBankAndPatchName(char* buff, double bank, double patch)
 {
 	int ibank = (int)(numBanks * 0.99 * bank);
 	int ipatch = (int)(banks[ibank].numPatches * 0.99 * patch);
 	sprintf(buff, "%s: %s", banks[ibank].longName, banks[ibank].longPatchNames[ipatch]);
 }
 
-VstInt32 WaveSynth::processEvents(VstEvents* events)
+VstInt32 WaveSynth::processEvents(VstEvents * events)
 {
 	for (int i = 0; i < events->numEvents; i++)
 	{
-		if (!(events->events[i]->type&kVstMidiType))
+		if (!(events->events[i]->type & kVstMidiType))
 			continue;
-		VstMidiEvent *midievent = (VstMidiEvent*)(events->events[i]);
+		VstMidiEvent* midievent = (VstMidiEvent*)(events->events[i]);
 		if ((char)midievent->midiData[0] >> 4 == MIDI_NOTE_OFF)
 		{
 			for (int oscid = 0; oscid < NUM_PARAM_SETS; oscid++)
@@ -737,7 +737,7 @@ VstInt32 WaveSynth::processEvents(VstEvents* events)
 	return 0;
 }
 
-void WaveSynth::processReplacing(float **inputs, float **outputs,
+void WaveSynth::processReplacing(float** inputs, float** outputs,
 	VstInt32 sampleFrames) {
 	VstTimeInfo* timeInfo = getTimeInfo(kVstTransportChanged);
 	if (timeInfo != NULL)
@@ -765,21 +765,19 @@ void WaveSynth::processReplacing(float **inputs, float **outputs,
 	auto outputBuf = std::make_unique<float[]>(outputBufSz);
 
 	// Real processing goes here
-	for (int oscid = 0; oscid < NUM_PARAM_SETS; oscid++)
+	for (int i = 0; i < chBufSz; i++)
 	{
-		const double voiceVolumeLevel = params[P_SET(oscid, P_LEVEL)]->value,
-			voicePan = params[P_SET(oscid, P_PAN)]->value;
-
-		if (voiceVolumeLevel < 0.001) 
+		for (int oscid = 0; oscid < NUM_PARAM_SETS; oscid++)
 		{
-			continue;
-		}
+			const double voiceVolumeLevel = params[P_SET(oscid, P_LEVEL)]->value,
+				voicePan = params[P_SET(oscid, P_PAN)]->value;
 
-		osc[oscid]->setMemoryLock(true);
-		// Processing each oscillator for the whole buffer at a time vastly improves performance
-		// maybe it's a CPU caching thing?
-		for (int i = 0; i < chBufSz; i++)
-		{
+			if (voiceVolumeLevel < 0.001)
+			{
+				continue;
+			}
+			osc[oscid]->setMemoryLock(true);
+			
 			if (oscid == 0)
 				LFO->calculate();
 			const double monoOut = osc[oscid]->process(lfoToOscLfo * LFO->value) * voiceVolumeLevel;
@@ -787,11 +785,9 @@ void WaveSynth::processReplacing(float **inputs, float **outputs,
 			const double panCh0 = 1 - panCh1;
 			outputBuf[i] += (float)(monoOut * panCh0);
 			outputBuf[i + chBufSz] += (float)(monoOut * panCh1);
+			
+			osc[oscid]->setMemoryLock(false);
 		}
-		osc[oscid]->setMemoryLock(false);
-	}
-	for (int i = 0; i < chBufSz; i++)
-	{
 		for (int ch = 0; ch < 2; ch++)
 		{
 			double lfoValue;

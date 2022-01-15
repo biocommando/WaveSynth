@@ -23,7 +23,7 @@ typedef struct {
 	char key;
 	char keyTemp; // this is the to-be-played buffer that will be transferred to key when processing
 	int priority;
-	MS20Filter *filter;
+	MS20Filter* filter;
 	double envA, envD, envS, envR, envPos, releasePos, envToCutoff, tailMultiplier;
 } Voice;
 
@@ -43,11 +43,11 @@ private:
 	// so to protect the memory allocation and access we must have mutual exclusive lock for all memory operations.
 	std::mutex waveMemoryLock;
 
-	BasicFilter *DCCut;
-	BasicOscillator *LFO;
+	BasicFilter* DCCut;
+	BasicOscillator* LFO;
 	int LFOType;
 	double LFOFreq, LFOToFilter, LFOToPitch, LFOToLevel, LFOToCue;
-	void CreateBuffer(short *waveMemoryTemp, unsigned int waveLenTemp);
+	void CreateBuffer(short* waveMemoryTemp, unsigned int waveLenTemp);
 	void StartPlay(double freqHz, int voice);
 	void StopPlay(int voice);
 	void StopLoop(int voice);
@@ -58,7 +58,7 @@ public:
 	~WavePlayer();
 	bool isOneShot;
 	void SetVoiceMode(int mode);
-	void ReadFile(FILE *file);
+	void ReadFile(FILE* file);
 	double process(double AdditionalModulation = 0);
 	void NoteOn(char key, char velocity, double detune = 0, double phase = 0);
 	void NoteOff(char key, bool forceStop = false);
