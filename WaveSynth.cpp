@@ -813,7 +813,6 @@ void WaveSynth::processReplacing(float** inputs, float** outputs,
 			else
 				tempOut = downsamplingFilter2.process(tempOut);
 			outputBuf[ch * chBufSz + i] = (float)tempOut;
-
 		}
 	}
 	int outputBufIdx = 0;

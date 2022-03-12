@@ -58,8 +58,9 @@ public:
 class MultistageLowpassFilter
 {
 	std::vector<Filter> filters;
+	int stages;
 public:
-	MultistageLowpassFilter(float samplerate, int stages)
+	MultistageLowpassFilter(float samplerate, int stages) : stages(stages)
 	{
 		for (int i = 0; i < stages; i++)
 		{
@@ -67,7 +68,7 @@ public:
 		}
 	}
 
-	MultistageLowpassFilter() {}
+	MultistageLowpassFilter() : stages(0) {}
 
 	void update(float hz)
 	{
@@ -80,9 +81,11 @@ public:
 	float process(float input)
 	{
 		float output = input;
-		for (auto i = filters.begin(); i != filters.end(); i++)
+		// For some reason when compiling with visual studio using iterator is MUCH
+		// less efficient
+		for (int i = 0; i < stages; i++)
 		{
-			output = i->processLowpass(output);
+			output = filters[i].processLowpass(output);
 		}
 		return output;
 	}
