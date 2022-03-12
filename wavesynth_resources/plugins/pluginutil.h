@@ -16,9 +16,11 @@
 #define MAX_NUM_PARAMS 1000
 #define LAST_PARAM (MAX_NUM_PARAMS - 1)
 
+#define STR_LENGTH 64
+
 typedef struct
 {
-    char name[64];
+    char name[STR_LENGTH];
     double value;
 } Parameter;
 
@@ -44,9 +46,40 @@ Parameter *get_parameter_ptr(const char *name)
     return NULL;
 }
 
+int get_string_parameter(const char *name, char *value)
+{
+    if (!init || !name)
+        return -1;
+    LOG_TRACE("Get string param '%s'", name);
+    FOR_EACH_PARAMETER(i)
+    {
+        if (parameters[i].name[0] == '$')
+        {
+            int found = 1;
+            int j;
+            for (j = 0; name[j]; j++)
+            {
+                if (name[j] != parameters[i].name[j + 1])
+                {
+                    found = 0;
+                    break;
+                }
+            }
+            if (found && j == (int)parameters[i].value)
+            {
+                strncpy(value, &parameters[i].name[j + 1], STR_LENGTH);
+                LOG_TRACE("Found string parameter '%s': '%s'", name, value);
+                return i;
+            }
+        }
+    }
+    LOG_TRACE("Failed to find requested string parameter: '%s'", name);
+    return -1;
+}
+
 void new_parameter(const char *name, double value)
 {
-    if (get_parameter_ptr(name) == NULL && strlen(name) < 64)
+    if (get_parameter_ptr(name) == NULL && strlen(name) < STR_LENGTH)
     {
         int i;
         for (i = 0; parameters[i].name[0]; i++)
@@ -54,7 +87,7 @@ void new_parameter(const char *name, double value)
         }
         if (i < LAST_PARAM)
         {
-            strcpy(parameters[i].name, name);
+            strncpy(parameters[i].name, name, STR_LENGTH);
             parameters[i].value = value;
             parameters[i + 1].name[0] = 0;
             LOG_TRACE("Created new parameter %s", name);
@@ -72,7 +105,6 @@ void read_ipc_data(const char *filename)
     parameters[LAST_PARAM].value = 0;
     parameters[0].name[0] = 0;
     FILE *f = fopen(filename, "r");
-    int param_count = 0;
     init = 1;
     while (!feof(f))
     {
@@ -97,8 +129,10 @@ void save_ipc_data(char **argv)
     {
         fprintf(f, "%s %lf\n", parameters[i].name, parameters[i].value);
     }
+#ifndef NO_DEBUG_VARIABLES
     fprintf(f, "#debug_data_program_name %s\n", argv[0]);
     fprintf(f, "#debug_data_ipc_file_full_path %s\n", argv[1]);
+#endif
     fclose(f);
 }
 
