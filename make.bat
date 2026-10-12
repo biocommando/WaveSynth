@@ -27,7 +27,7 @@ if not exist build\vstgui.o (
 g++ -shared -static -o wavesynth.clap %CXXFLAGS% ^
     ClapPlugin.cpp WaveSynth.cpp EditorGui.cpp CChangeEvents.cpp ^
     BasicCompressor.cpp BasicDelay.cpp BasicFilter.cpp BasicOscillator.cpp ^
-    PredictableRandom.cpp PresetLoader.cpp WavePlayer.cpp ExecutePlugin.cpp ^
+    PredictableRandom.cpp PresetLoader.cpp PresetBrowser.cpp WavePlayer.cpp ExecutePlugin.cpp ^
     Flanger.cpp IniFileReader.cpp MacroCache.cpp MinimalParameter.cpp ^
     MS20Filter.cpp Saturation.cpp strrpl.cpp WaveSynthSettings.cpp ^
     build/vstgui.o build/vstcontrols.o build/aeffguieditor.o ^

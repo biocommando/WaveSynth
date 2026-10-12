@@ -18,6 +18,10 @@ EditorGui::EditorGui(WaveSynth* effect)
 	presetNum = 0;
 	presetGroupNum = 0;
 	lastTweakedTag = -1;
+	presetButton = nullptr;
+	presetBrowser = nullptr;
+	currentPreset = -1;
+	presetModified = false;
 }
 
 EditorGui::~EditorGui()
@@ -257,19 +261,13 @@ bool EditorGui::open(void* ptr)
 		newFrame->addView(menu[i]);
 	}
 	r = CRect(0, wSize->bottom - valueLabels[0]->getHeight(), knobSize * 22 / 3, wSize->bottom);
-	presetMenu = new COptionMenu(r, this, PRESET_MENU_ID);
-	presetMenu->setBackColor(cFg);
-	presetMenu->setFrameColor(cBg);
-	presetMenu->setFontColor(cBg);
-	presetMenu->addEntry(new CMenuItem("Select preset...", 1 << 1));
-	presetMenu->addEntry(new CMenuItem("Save as new"));
 	presetLoader.readPresets();
-	auto presets = presetLoader.getPresets();
-	for (int i = 0; i < presets.size(); i++)
-	{
-		presetMenu->addEntry(new CMenuItem(presets[i].c_str()));
-	}
-	newFrame->addView(presetMenu);
+	if (currentPreset >= presetLoader.count())
+		currentPreset = -1;
+	presetButton = new PresetButton(r, this, PRESET_BUTTON_ID, "", cFg, cBg);
+	newFrame->addView(presetButton);
+	updatePresetButton();
+	presetBrowser = new PresetBrowser(frameSize, newFrame, this, &presetLoader, cFg, cBg);
 
 	//-- forget the bitmaps
 	for (int i = 0; i < 10; i++)
@@ -300,7 +298,23 @@ void EditorGui::close()
 	//-- so that calls to setParameter won't crash.
 	CFrame* oldFrame = frame;
 	frame = 0;
-	delete oldFrame;
+	if (oldFrame)
+	{
+		// the browser is owned by the editor, not by the frame
+		if (oldFrame->getModalView() == presetBrowser)
+		{
+			presetBrowser->endNameEdit();
+			oldFrame->setFocusView(0);
+			oldFrame->setModalView(0);
+		}
+		delete oldFrame;
+	}
+	if (presetBrowser)
+	{
+		presetBrowser->forget();
+		presetBrowser = nullptr;
+	}
+	presetButton = nullptr;
 }
 
 MacroCommand* MacroMenu::getCurrentCommand()
@@ -406,6 +420,87 @@ void MacroMenu::doMacroEdits(EditorGui * editor, long lastTweakedTag)
 	}
 }
 
+std::vector<ParamDTO> EditorGui::getCurrentParams(int *wavePack)
+{
+	std::vector<ParamDTO> dtos;
+	for (int i = 0; i < NUM_PARAMS; i++)
+	{
+		ParamDTO dto;
+		effect->getParameter(&dto, i);
+		dtos.push_back(dto);
+	}
+	*wavePack = effect->getSelectedPack();
+	return dtos;
+}
+
+void EditorGui::loadPreset(int presetIndex)
+{
+	int packIdx = 0;
+	auto dtos = presetLoader.loadPreset(presetIndex, &packIdx);
+	if (dtos.empty())
+		return;
+	effect->setSelectedPack(packIdx);
+	for (int i = 0; i < dtos.size(); i++)
+	{
+		auto paramIdx = effect->setParameter(&dtos[i]);
+		if (paramIdx < 0 || paramIdx >= NUM_PARAMS)
+			continue;
+		setParameter(paramIdx, effect->getParameter(paramIdx));
+		valueChanged(paramIdx);
+	}
+	setCurrentPreset(presetIndex);
+	// Redraw everything. Relying on the dirty views doesn't work here: VSTGUI paints the bounding box
+	// of the invalid region into the back buffer, marking the views in it clean, but copies only the
+	// invalid region to the window. The browser views invalidated right away would get painted
+	// before the idle has invalidated the changed knobs, and some knobs would stay stale on screen.
+	if (frame)
+		frame->invalid();
+}
+
+void EditorGui::setCurrentPreset(int presetIndex)
+{
+	currentPreset = presetIndex;
+	presetModified = false;
+	updatePresetButton();
+}
+
+void EditorGui::presetDeleted(int presetIndex)
+{
+	if (currentPreset == presetIndex)
+		setCurrentPreset(-1);
+	else if (currentPreset > presetIndex)
+		setCurrentPreset(currentPreset - 1);
+}
+
+void EditorGui::updatePresetButton()
+{
+	if (!presetButton)
+		return;
+	if (currentPreset < 0)
+		presetButton->setTitle("Presets...");
+	else
+		presetButton->setTitle("Preset: " + presetLoader.getName(currentPreset) + (presetModified ? " (modified)" : ""));
+}
+
+void EditorGui::openPresetBrowser()
+{
+	if (!frame || !presetBrowser || frame->getModalView())
+		return;
+	presetBrowser->refresh(currentPreset);
+	frame->setModalView(presetBrowser);
+	presetBrowser->invalid();
+}
+
+void EditorGui::closePresetBrowser()
+{
+	if (!frame || frame->getModalView() != presetBrowser)
+		return;
+	presetBrowser->endNameEdit();
+	frame->setFocusView(0);
+	frame->setModalView(0);
+	frame->invalid();
+}
+
 void EditorGui::valueChanged(int index)
 {
 	valueChanged(controls[index]);
@@ -422,35 +517,9 @@ void EditorGui::valueChanged(CControl * pControl)
 		menu[menuIdx]->setCurrent(0);
 		return;
 	}
-	if (tag == PRESET_MENU_ID)
+	if (tag == PRESET_BUTTON_ID)
 	{
-		int presetIndex = presetMenu->getCurrentIndex() - 2;
-		if (presetIndex == -1)
-		{
-			std::vector<ParamDTO> dtos;
-			for (int i = 0; i < NUM_PARAMS; i++)
-			{
-				ParamDTO dto;
-				((WaveSynth*)effect)->getParameter(&dto, i);
-				dtos.push_back(dto);
-			}
-			auto packIdx = ((WaveSynth*)effect)->getSelectedPack();
-			auto newName = presetLoader.savePreset(dtos, packIdx);
-			presetMenu->addEntry(new CMenuItem(newName.c_str()));
-		}
-		else
-		{
-			int packIdx = 0;
-			auto dtos = presetLoader.loadPreset(presetIndex, &packIdx);
-			((WaveSynth*)effect)->setSelectedPack(packIdx);
-			for (int i = 0; i < dtos.size(); i++)
-			{
-				auto paramIdx = ((WaveSynth*)effect)->setParameter(&dtos[i]);
-				setParameter(paramIdx, effect->getParameter(paramIdx));
-				valueChanged(paramIdx);
-			}
-		}
-		presetMenu->setCurrent(0);
+		openPresetBrowser();
 		return;
 	}
 	//-- valueChanged is called whenever the user changes one of the controls in the User Interface (UI)
@@ -460,6 +529,11 @@ void EditorGui::valueChanged(CControl * pControl)
 	effect->setParameterAutomated(tag, value);
 	SetValueLabelText(tag);
 	lastTweakedTag = tag;
+	if (!presetModified && currentPreset >= 0)
+	{
+		presetModified = true;
+		updatePresetButton();
+	}
 	for (int i = 0; i < NUM_PARAM_SETS; i++)
 	{
 		if (tag == P_SET(i, P_BANK) || tag == P_SET(i, P_PATCH))

@@ -8,6 +8,7 @@
 #include <vector>
 #include "MacroCache.h"
 #include "PresetLoader.h"
+#include "PresetBrowser.h"
 
 class WaveSynth;
 class EditorGui;
@@ -15,7 +16,7 @@ class EditorGui;
 constexpr auto MENU_1_ID = 1000;
 constexpr auto MENU_2_ID = 1001;
 constexpr auto MENU_3_ID = 1002;
-constexpr auto PRESET_MENU_ID = 2000;
+constexpr auto PRESET_BUTTON_ID = 2000;
 constexpr auto NUM_OF_MENUS = 3;
 constexpr auto MACRO_COMMAND_LENGTH = 500;
 
@@ -56,7 +57,12 @@ private:
 	PresetLoader presetLoader;
 	bool checkBanks;
 	MacroMenu *menu[NUM_OF_MENUS];
-	COptionMenu *presetMenu;
+	PresetButton *presetButton;
+	PresetBrowser *presetBrowser;
+	int currentPreset;
+	bool presetModified;
+	void updatePresetButton();
+	void openPresetBrowser();
 	/*MacroCache *menuCache[NUM_OF_MENUS];
 	bool macroMenuCached = false;*/
 	unsigned int presetGroupNum, presetNum;
@@ -68,6 +74,13 @@ public:
 	static void getEditorSize(int *width, int *height);
 	~EditorGui();
 
+
+	// used by PresetBrowser
+	std::vector<ParamDTO> getCurrentParams(int *wavePack);
+	void loadPreset(int presetIndex);
+	void setCurrentPreset(int presetIndex);
+	void presetDeleted(int presetIndex);
+	void closePresetBrowser();
 
 	// from AEffGUIEditor
 	bool open(void* ptr);
