@@ -6,7 +6,7 @@ set CLAP_INCLUDE=../../clap/include
 set VSTGUI_DIR=../../clapwrap/VSTGui
 set DEFINES=-DWIN32 -DWINDOWS -D_USE_MATH_DEFINES -D_CRT_SECURE_NO_WARNINGS
 rem to log host calls into wavesynth-clap.log in the temp dir:
-Set EXTRA_FLAGS=-DCLAP_DEBUG_LOG
+rem Set EXTRA_FLAGS=-DCLAP_DEBUG_LOG
 set CXXFLAGS=-O2 -std=c++17 -I%CLAP_INCLUDE% -I%VSTGUI_DIR% %DEFINES% %EXTRA_FLAGS%
 rem VSTGui is compiled without optimization like in FuzzOfDoom. It has undefined behaviour
 rem (e.g. "CRect viewSize = pV->getViewSize (viewSize);" in vstgui.cpp) that gcc -O2 turns into
