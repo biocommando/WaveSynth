@@ -25,9 +25,9 @@ typedef struct {
 	char			N		id excluding terminating zero
 	float			1		floatValue
 	*/
-	char* fromMem(char* mem)
+	const char* fromMem(const char* mem)
 	{
-		char* ptr = mem;
+		const char* ptr = mem;
 		unsigned short blockSize = 0;
 		memcpy(&blockSize, ptr, sizeof(unsigned short));
 		ptr += sizeof(unsigned short);

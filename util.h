@@ -13,19 +13,9 @@ class Util
         if (workDir != "")
             return workDir;
         // work out the resource directory
-        // first we get the DLL path from windows API
-        extern void *hInstance;
-#ifdef UNICODE
-        wchar_t workDirWc[1024];
-        GetModuleFileName((HMODULE)hInstance, workDirWc, 1024);
-        char workDirC[1024];
-        wcstombs(workDirC, workDirWc, 1024);
-#else
-        char workDirC[1024];
-        GetModuleFileName((HMODULE)hInstance, workDirC, 1024);
-#endif
-
-        workDir.assign(workDirC);
+        // first we get the plugin path (given by the host in clap_entry.init)
+        extern const char *get_plugin_path();
+        workDir.assign(get_plugin_path());
 
         // let's get rid of the DLL file name
         auto posBslash = workDir.find_last_of('\\');

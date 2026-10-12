@@ -1,6 +1,7 @@
 #include "CChangeEvents.h"
+#include "WaveSynth.h"
 
-CChangeMapping::CChangeMapping(VstInt32 paramNumber, int controllerNumber)
+CChangeMapping::CChangeMapping(int paramNumber, int controllerNumber)
 {
 	this->controllerNumber = controllerNumber;
 	this->paramNumber = paramNumber;
@@ -19,13 +20,13 @@ int CChangeMapping::getControllerNumber()
 }
 
 
-void CChangeMapping::setValueAndNotify(float value, AudioEffectX *plugin)
+void CChangeMapping::setValueAndNotify(float value, WaveSynth *plugin)
 {
 	this->value = value;
-	plugin->setParameter(paramNumber, value);
+	plugin->setParameterAutomated(paramNumber, value);
 }
 
-CChangeEvents::CChangeEvents(AudioEffectX *plugin)
+CChangeEvents::CChangeEvents(WaveSynth *plugin)
 {
 	mappingCount = 0;
 	this->plugin = plugin;
@@ -37,7 +38,7 @@ CChangeEvents::~CChangeEvents()
 }
 
 
-void CChangeEvents::addCCMapping(VstInt32 paramNumber, int controllerNumber)
+void CChangeEvents::addCCMapping(int paramNumber, int controllerNumber)
 {
 	mappingCount++;
 	const int mappingIndex = mappingCount - 1;

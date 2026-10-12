@@ -6,6 +6,7 @@
 #include <cstdio>
 #include <cmath>
 #include <mutex>
+#include <memory>
 #define NUM_VOICES 64
 #define SEMITONE 1.0594630943592952645618252949463
 #define LOWEST_C_HZ 8.1757989156

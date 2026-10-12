@@ -1,31 +1,31 @@
 #pragma once
-#include "audioeffectx.h"
-#include "aeffguieditor.h"
 #include <vector>
+
+class WaveSynth;
 
 class CChangeMapping
 {
 private:
 	int controllerNumber;
 	float value;
-	VstInt32 paramNumber;
+	int paramNumber;
 public:
-	void setValueAndNotify(float value, AudioEffectX *plugin);
+	void setValueAndNotify(float value, WaveSynth *plugin);
 	int getControllerNumber();
-	CChangeMapping(VstInt32 paramNumber, int controllerNumber);
+	CChangeMapping(int paramNumber, int controllerNumber);
 	~CChangeMapping();
 };
 
 class CChangeEvents
 {
 private:
-	AudioEffectX *plugin;
+	WaveSynth *plugin;
 	std::vector<CChangeMapping> mappings;
 	int mappingCount;
 public:
-	void addCCMapping(VstInt32 paramNumber, int controllerNumber);
+	void addCCMapping(int paramNumber, int controllerNumber);
 	void onControllerChange(int controllerNumber, int value0to127);
-	CChangeEvents(AudioEffectX *plugin);
+	CChangeEvents(WaveSynth *plugin);
 	~CChangeEvents();
 };
 

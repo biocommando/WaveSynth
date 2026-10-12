@@ -11,10 +11,12 @@ public:
 	char name[32], label[8];
 	double value;
 	int showAsInt, tag;
-	MinimalParameter(char *name, double defaultVal, double scaling, double addition, char *label);
+	MinimalParameter(const char *name, double defaultVal, double scaling, double addition, const char *label);
 	~MinimalParameter();
 	void GetDisplayText(char *out, int bsize);
-	void AddDisplayMapping (char *mapping);
+	void GetDisplayText(char *out, int bsize, double value);
+	int GetSelection(double value);
+	void AddDisplayMapping (const char *mapping);
 	void ClearDisplayMappings();
 	int GetSelection();
 	double SetSelection(int index);

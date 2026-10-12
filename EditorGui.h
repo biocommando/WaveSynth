@@ -9,6 +9,9 @@
 #include "MacroCache.h"
 #include "PresetLoader.h"
 
+class WaveSynth;
+class EditorGui;
+
 constexpr auto MENU_1_ID = 1000;
 constexpr auto MENU_2_ID = 1001;
 constexpr auto MENU_3_ID = 1002;
@@ -36,7 +39,7 @@ public:
 	//CMenuItem* addEntry(const char *entry, long index = -1L, long itemFlags = 0L) override;
 	void addEntry(MacroCommand entry);
 	void addEntry(const std::string& title);
-	void doMacroEdits(AEffGUIEditor *editor, long lastTweakedTag);
+	void doMacroEdits(EditorGui *editor, long lastTweakedTag);
 	MacroCommand* getCurrentCommand();
 	/*void saveToCache(MacroCache *cache);
 	void loadFromCache(MacroCache *cache);*/
@@ -45,7 +48,7 @@ public:
 	~MacroMenu();
 };
 
-class EditorGui : public AEffGUIEditor, public CControlListener
+class EditorGui : public AEffGUIEditorFst, public CControlListener
 {
 private:
 	long lastTweakedTag;
@@ -60,14 +63,16 @@ private:
 	//void doMacroEdits(const char *command);
 	void fillMacroMenu(MacroMenu *menu, int tag);
 public:
-	EditorGui(void*);
+	EditorGui(WaveSynth *effect);
+	WaveSynth *getSynth() { return effect; }
+	static void getEditorSize(int *width, int *height);
 	~EditorGui();
 
 
 	// from AEffGUIEditor
 	bool open(void* ptr);
 	void close();
-	void setParameter(VstInt32 index, float value);
+	void setParameter(VstInt32 index, float value) override;
 	//virtual bool getRect(ERect **rect);
 
 	// from CControlListener
@@ -75,6 +80,7 @@ public:
 	void valueChanged(int index);
 
 protected:
+	WaveSynth *effect;
 	CControl* controls[NUM_PARAMS];
 	CTextLabel* valueLabels[NUM_PARAMS];
 	CTextLabel* banksAndPatches[NUM_PARAM_SETS];

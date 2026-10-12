@@ -1,18 +1,11 @@
-// This is the main DLL file.
-
-#include "stdafx.h"
 #include "WaveSynth.h"
 #include "EditorGui.h"
 #include "IniFileReader.h"
 #include <cstdio>
 #include <cstdlib>
 #include <cmath>
+#include <memory>
 #include "util.h"
-
-FstAudioEffect* createFstInstance(audioMasterCallback audioMaster)
-{
-	return new WaveSynth(audioMaster);
-}
 
 bool loggingOn = true;
 // same as above but persists the file until it is unloaded... this can be used when a faster logwrite is needed
@@ -26,6 +19,7 @@ void WriteLogPersist(const char* msg, double val = 0, bool unLoad = false)
 	if (log == NULL)
 	{
 		log = fopen("c:\\users\\public\\wavesynth.txt", mode);
+		if (log == NULL) return;
 	}
 	fprintf(log, "%d %s - %f\n", event_id++, msg, val);
 	if (unLoad)
@@ -47,24 +41,17 @@ void getWorkDir(char* workDir)
 	strcpy(workDir, dir.c_str());
 }
 
-WaveSynth::WaveSynth(audioMasterCallback audioMaster) :
-	AudioEffectX(audioMaster, 0, NUM_PARAMS) {
-	setNumInputs(2); // stereo in
-	setNumOutputs(2); // stereo out
-	setUniqueID('WaSy');	// identify
+WaveSynth::WaveSynth() :
+	downsamplingFilter1(44100),
+	downsamplingFilter2(44100)
+{
 	getWorkDir(workDir);
 	CChanges = new CChangeEvents(this);
-	chunk = NULL;
-	transactionCount = 0;
-	isSynth(true);
-	programsAreChunks();
-	if (settings.getUseGUI())
-	{
-		hasEditor();
-	}
+	for (int i = 0; i < NUM_PARAM_SETS; i++)
+		loadedWave[i][0] = loadedWave[i][1] = -1;
 }
 
-void WaveSynth::open()
+void WaveSynth::init()
 {
 	startTransaction();
 
@@ -75,20 +62,6 @@ void WaveSynth::open()
 	GetBanksAndPatches();
 
 	oversampling = settings.getOversampling();
-
-	int sampleRate = (int)getSampleRate();
-
-	downsamplingFilter1 = MultistageLowpassFilter(sampleRate * oversampling, 4);
-	downsamplingFilter1.update(0.5 * sampleRate);
-	downsamplingFilter2 = MultistageLowpassFilter(sampleRate * oversampling, 4);
-	downsamplingFilter2.update(0.5 * sampleRate);
-
-	for (int ch = 0; ch < 2; ch++)
-	{
-		delay[ch] = new BasicDelay(sampleRate * oversampling, sampleRate * oversampling);
-		flanger[ch] = new Flanger(sampleRate * oversampling, ch * 0.5);
-	}
-	LFO = new BasicOscillator(sampleRate * oversampling);
 
 	params[P_TOTAL_LEVEL] = new MinimalParameter("Level", 0.5, 1, 0, "");
 	params[P_UNISON_COUNT] = new MinimalParameter("Unison", 0, NUM_UNISON_VOICES * 0.99, 1, "");
@@ -134,7 +107,6 @@ void WaveSynth::open()
 	for (int oscid = 0; oscid < NUM_PARAM_SETS; oscid++)
 	{
 		char temp[10];
-		osc[oscid] = new WavePlayer(sampleRate * oversampling);
 		sprintf(temp, "Bank_%d", oscid + 1);
 		params[P_SET(oscid, P_BANK)] = new MinimalParameter(temp, 0, 1, 0, "");
 		params[P_SET(oscid, P_BANK)]->tag = -1;
@@ -145,7 +117,7 @@ void WaveSynth::open()
 		sprintf(temp, "Patch_%d", oscid + 1);
 		params[P_SET(oscid, P_PATCH)] = new MinimalParameter(temp, 0, 1, 0, "");
 		params[P_SET(oscid, P_PATCH)]->tag = -1;
-		ChangePatch(osc[oscid], params[P_SET(oscid, P_BANK)], params[P_SET(oscid, P_PATCH)]);
+		ChangePatch(oscid);
 
 		sprintf(temp, "Attack%d", oscid + 1);
 		params[P_SET(oscid, P_ATTACK)] = new MinimalParameter(temp, 0, 4, 0, "sec");
@@ -210,13 +182,60 @@ void WaveSynth::open()
 		params[P_SET(oscid, P_PAN)]->showAsInt = 1;
 	}
 
-	if (settings.getUseGUI())
-	{
-		extern AEffGUIEditor* createEditor(AudioEffectX*);
-		setEditor(createEditor(this));
-	}
+
+	for (int i = 0; i < NUM_PARAMS; i++)
+		paramDefaults[i] = params[i]->value;
 
 	ReadCCMappings();
+
+	endTransaction();
+}
+
+void WaveSynth::destroyDsp()
+{
+	activated = false;
+	for (int oscid = 0; oscid < NUM_PARAM_SETS; oscid++)
+	{
+		delete osc[oscid];
+		osc[oscid] = nullptr;
+		loadedWave[oscid][0] = loadedWave[oscid][1] = -1;
+	}
+	for (int ch = 0; ch < 2; ch++)
+	{
+		delete delay[ch];
+		delete flanger[ch];
+		delay[ch] = nullptr;
+		flanger[ch] = nullptr;
+	}
+	delete LFO;
+	LFO = nullptr;
+}
+
+void WaveSynth::activate(int sampleRate)
+{
+	startTransaction();
+	destroyDsp();
+	this->sampleRate = sampleRate;
+
+	downsamplingFilter1 = FourstageLowpassFilter(sampleRate * oversampling);
+	downsamplingFilter1.update(0.5 * sampleRate);
+	downsamplingFilter2 = FourstageLowpassFilter(sampleRate * oversampling);
+	downsamplingFilter2.update(0.5 * sampleRate);
+
+	for (int ch = 0; ch < 2; ch++)
+	{
+		delay[ch] = new BasicDelay(sampleRate * oversampling, sampleRate * oversampling);
+		flanger[ch] = new Flanger(sampleRate * oversampling, ch * 0.5);
+	}
+	LFO = new BasicOscillator(sampleRate * oversampling);
+	for (int oscid = 0; oscid < NUM_PARAM_SETS; oscid++)
+		osc[oscid] = new WavePlayer(sampleRate * oversampling);
+
+	activated = true;
+
+	// Push the current parameter state to the newly created DSP objects
+	for (int i = 0; i < NUM_PARAMS; i++)
+		updateParams(i);
 
 	endTransaction();
 }
@@ -278,30 +297,18 @@ void WaveSynth::ReadCCMappings()
 	delete reader;
 }
 
-void WaveSynth::close()
+WaveSynth::~WaveSynth()
 {
-	if (chunk != NULL)
-		free(chunk);
+	destroyDsp();
 
-	for (int i = 0; i < NUM_PARAMS; i++)
-		delete params[i];
-
-	for (int oscid = 0; oscid < NUM_PARAM_SETS; oscid++)
-		delete osc[oscid];
-
-	for (int ch = 0; ch < 2; ch++)
+	if (predictableRandom)
 	{
-		delete delay[ch];
-		delete flanger[ch];
+		for (int i = 0; i < NUM_PARAMS; i++)
+			delete params[i];
 	}
 
 	delete CChanges;
-	delete LFO;
 	delete predictableRandom;
-}
-
-WaveSynth::~WaveSynth() {
-
 }
 // Chunk consists of:
 // version id
@@ -314,11 +321,8 @@ WaveSynth::~WaveSynth() {
 // In version 4 onwards:
 // -- used random seed as int
 // all else: parameter data
-VstInt32 WaveSynth::getChunk(void** data, bool isPreset)
+std::string WaveSynth::getChunk()
 {
-	if (chunk)
-		free(chunk);
-
 	const unsigned int headerSize = 2 + sizeof(unsigned short) + sizeof(unsigned int) + sizeof(int) + sizeof(int);
 	char header[headerSize];
 	header[0] = 'v';
@@ -340,10 +344,7 @@ VstInt32 WaveSynth::getChunk(void** data, bool isPreset)
 		getParameter(&dto, i);
 		s.append(dto.toMem());
 	}
-
-	*data = malloc(s.size());
-	memcpy(*data, s.c_str(), s.size());
-	return s.size();
+	return s;
 }
 
 void WaveSynth::setSelectedPack(int packIndex)
@@ -361,17 +362,19 @@ void WaveSynth::setSelectedPack(int packIndex)
 			}
 			params[P_SET(i, P_PATCH)]->tag = -1;
 			params[P_SET(i, P_BANK)]->tag = -1;
+			// The waves need to be reloaded from the new pack
+			loadedWave[i][0] = loadedWave[i][1] = -1;
 		}
 	}
 }
 
-VstInt32 WaveSynth::setChunk(void* data, VstInt32 byteSize, bool isPreset)
+bool WaveSynth::setChunk(const void* data, int byteSize)
 {
-	auto chunk = (char*)data;
+	auto chunk = (const char*)data;
 
 	unsigned short version;
 	unsigned int dataOffset = 0;
-	char* ptr = chunk;
+	const char* ptr = chunk;
 	int offset = 0;
 	if (byteSize < 2 + sizeof(unsigned short) || !(chunk[0] == 'v' && chunk[1] == 'i'))
 	{
@@ -412,14 +415,17 @@ VstInt32 WaveSynth::setChunk(void* data, VstInt32 byteSize, bool isPreset)
 	while (ptr - chunk < byteSize)
 	{
 		ParamDTO dto;
-		ptr = dto.fromMem(ptr);
+		const char *next = dto.fromMem(ptr);
+		if (next <= ptr) // corrupted data
+			return false;
+		ptr = next;
 		setParameter(&dto);
 	}
 	if (version == 1)
 	{
 		setParameter(P_GLOBAL_LFO_FREQ, (float)(getParameter(P_GLOBAL_LFO_FREQ) / 5.0));
 	}
-	return 0;
+	return true;
 }
 
 
@@ -484,38 +490,42 @@ void WaveSynth::setWaveFileOffset(FILE * waves, int bank, int patch)
 	fseek(waves, offset, SEEK_SET);
 }
 
-void WaveSynth::ChangePatch(WavePlayer * osc, MinimalParameter * pBank, MinimalParameter * pPatch)
+void WaveSynth::ChangePatch(int oscid)
 {
-	bool readNewWave = false;
+	MinimalParameter *pBank = params[P_SET(oscid, P_BANK)];
+	MinimalParameter *pPatch = params[P_SET(oscid, P_PATCH)];
 	startTransaction();
 	if (pBank->tag != pBank->GetSelection())
 	{
 		int sel = pBank->GetSelection();
-		char temp[10];
-		strcpy(temp, pPatch->name);
 		pPatch->ClearDisplayMappings();
 		for (int i = 0; i < banks[sel].numPatches; i++)
 		{
 			pPatch->AddDisplayMapping(banks[sel].patchNames[i]);
 		}
 		pPatch->value = 0;
-		readNewWave = true;
 	}
-	if (pPatch->tag != pPatch->GetSelection())
+	pPatch->tag = pPatch->GetSelection();
+	pBank->tag = pBank->GetSelection();
+	// The oscillators exist only when the plugin is activated; the wave is loaded on activation
+	if (osc[oscid] && (loadedWave[oscid][0] != pBank->tag || loadedWave[oscid][1] != pPatch->tag))
 	{
-		readNewWave = true;
-	}
-	if (readNewWave)
-	{
-		pPatch->tag = pPatch->GetSelection();
-		pBank->tag = pBank->GetSelection();
-		char temp[256], pack[256];
+		char temp[1024], pack[256];
 		settings.getPack(settings.getSelectedPackIndex(), pack);
-		sprintf(temp, "%s%s", workDir, pack);
+		snprintf(temp, sizeof(temp), "%s%s", workDir, pack);
 		FILE* allWaves = fopen(temp, "rb");
-		setWaveFileOffset(allWaves, pBank->tag, pPatch->tag);
-		osc->ReadFile(allWaves);
-		fclose(allWaves);
+		if (allWaves)
+		{
+			setWaveFileOffset(allWaves, pBank->tag, pPatch->tag);
+			osc[oscid]->ReadFile(allWaves);
+			fclose(allWaves);
+			loadedWave[oscid][0] = pBank->tag;
+			loadedWave[oscid][1] = pPatch->tag;
+		}
+		else
+		{
+			WriteLog("Could not open wave pack");
+		}
 	}
 	endTransaction();
 }
@@ -562,7 +572,10 @@ void WaveSynth::updateParams(int callerIndex)
 	for (int oscid = 0; oscid < NUM_PARAM_SETS; oscid++)
 	{
 		if (callerIndex == P_SET(oscid, P_BANK) || callerIndex == P_SET(oscid, P_PATCH))
-			ChangePatch(osc[oscid], params[P_SET(oscid, P_BANK)], params[P_SET(oscid, P_PATCH)]);
+			ChangePatch(oscid);
+		// The rest of the parameters are applied to the DSP objects when the plugin is activated
+		else if (!activated)
+			continue;
 		else if (callerIndex == P_SET(oscid, P_ATTACK) || callerIndex == P_SET(oscid, P_DECAY) || callerIndex == P_SET(oscid, P_SUSTAIN) || callerIndex == P_SET(oscid, P_TAIL))
 			osc[oscid]->SetEnvelope(params[P_SET(oscid, P_ATTACK)]->value, params[P_SET(oscid, P_DECAY)]->value, params[P_SET(oscid, P_SUSTAIN)]->value, params[P_SET(oscid, P_TAIL)]->value);
 		else if (callerIndex == P_SET(oscid, P_DETUNE_OCT) || callerIndex == P_SET(oscid, P_DETUNE_CENT))
@@ -590,7 +603,11 @@ void WaveSynth::updateParams(int callerIndex)
 		else if (callerIndex == P_SET(oscid, P_LEVEL) && params[P_SET(oscid, P_LEVEL)]->value < 0.001)
 			osc[oscid]->MuteAll();
 	}
-	if (callerIndex == P_DELAY_TIME)
+	if (!activated)
+	{
+		// pass
+	}
+	else if (callerIndex == P_DELAY_TIME)
 	{
 		for (int ch = 0; ch < 2; ch++)
 			delay[ch]->setTime(params[P_DELAY_TIME]->value * 1000);
@@ -619,38 +636,69 @@ void WaveSynth::updateParams(int callerIndex)
 }
 
 
-float WaveSynth::getParameter(VstInt32 index)
+float WaveSynth::getParameter(int index)
 {
-	if (index >= NUM_PARAMS)
+	if (index < 0 || index >= NUM_PARAMS)
 		return 0;
 	return (float)params[index]->value;
 }
-void WaveSynth::setParameter(VstInt32 index, float value)
+void WaveSynth::setParameter(int index, float value)
 {
-	if (index >= NUM_PARAMS)
+	if (index < 0 || index >= NUM_PARAMS)
 		return;
 	params[index]->value = value;
 	updateParams(index);
-	if (isTransactionOver())
-		((EditorGui*)(this->editor))->setParameter(index, value);
+	if (editor && isTransactionOver())
+		editor->setParameter(index, value);
 }
-void WaveSynth::getParameterName(VstInt32 index, char* label)
+void WaveSynth::setParameterAutomated(int index, float value)
 {
-	if (index >= NUM_PARAMS)
+	setParameter(index, value);
+	if (index < 0 || index >= NUM_PARAMS)
 		return;
-	strcpy_s(label, 8, params[index]->name);
+	std::lock_guard<std::mutex> guard(pendingHostNotificationsLock);
+	pendingHostNotifications.push_back(index);
 }
-void WaveSynth::getParameterDisplay(VstInt32 index, char* text)
+std::vector<int> WaveSynth::takePendingHostNotifications()
+{
+	std::vector<int> ret;
+	// Called from the audio thread: don't wait for the lock
+	std::unique_lock<std::mutex> guard(pendingHostNotificationsLock, std::try_to_lock);
+	if (guard.owns_lock())
+		ret.swap(pendingHostNotifications);
+	return ret;
+}
+bool WaveSynth::hasPendingHostNotifications()
+{
+	std::lock_guard<std::mutex> guard(pendingHostNotificationsLock);
+	return !pendingHostNotifications.empty();
+}
+void WaveSynth::getParameterName(int index, char* label)
+{
+	if (index < 0 || index >= NUM_PARAMS)
+		return;
+	strcpy(label, params[index]->name);
+}
+void WaveSynth::getParameterDisplay(int index, char* text)
 {
 	params[index]->GetDisplayText(text, 8);
 }
-void WaveSynth::getParameterLabel(VstInt32 index, char* label)
+void WaveSynth::getParameterDisplay(int index, double value, char* text, int size)
 {
-	strcpy_s(label, 8, params[index]->label);
+	char display[32];
+	params[index]->GetDisplayText(display, sizeof(display), value);
+	if (params[index]->label[0])
+		snprintf(text, size, "%s %s", display, params[index]->label);
+	else
+		snprintf(text, size, "%s", display);
+}
+void WaveSynth::getParameterLabel(int index, char* label)
+{
+	strcpy(label, params[index]->label);
 }
 bool WaveSynth::getEffectName(char* name)
 {
-	strcpy_s(name, 32, "Little, ugly gnome");
+	strcpy(name, "Little, ugly gnome");
 	return true;
 }
 bool WaveSynth::getProductString(char* text)
@@ -660,7 +708,7 @@ bool WaveSynth::getProductString(char* text)
 }
 bool WaveSynth::getVendorString(char* text)
 {
-	strcpy_s(text, 64, "(c) 2016-2022 Joonas Salonpaa");
+	strcpy(text, "(c) 2016-2026 Joonas Salonpaa");
 	return true;
 }
 void WaveSynth::getBankAndPatchName(char* buff, double bank, double patch)
@@ -670,83 +718,99 @@ void WaveSynth::getBankAndPatchName(char* buff, double bank, double patch)
 	sprintf(buff, "%s: %s", banks[ibank].longName, banks[ibank].longPatchNames[ipatch]);
 }
 
-VstInt32 WaveSynth::processEvents(VstEvents * events)
+void WaveSynth::noteOn(int key, int velocity)
 {
-	for (int i = 0; i < events->numEvents; i++)
+	int unisonCount = (int)(params[P_UNISON_COUNT]->value * 0.99 * NUM_UNISON_VOICES + 1);
+	int seqMode = params[P_SEQUENCE]->GetSelection();
+	for (int oscid = 0; oscid < NUM_PARAM_SETS; oscid++)
 	{
-		if (!(events->events[i]->type & kVstMidiType))
-			continue;
-		VstMidiEvent* midievent = (VstMidiEvent*)(events->events[i]);
-		if ((char)midievent->midiData[0] >> 4 == MIDI_NOTE_OFF)
-		{
-			for (int oscid = 0; oscid < NUM_PARAM_SETS; oscid++)
-				osc[oscid]->NoteOff(midievent->midiData[1]);
-		}
-		else if ((char)midievent->midiData[0] >> 4 == MIDI_NOTE_ON)
-		{
-			int unisonCount = (int)(params[P_UNISON_COUNT]->value * 0.99 * NUM_UNISON_VOICES + 1);
-			int seqMode = params[P_SEQUENCE]->GetSelection();
-			for (int oscid = 0; oscid < NUM_PARAM_SETS; oscid++)
-			{
-				if (params[P_SET(oscid, P_LEVEL)]->value < 0.001) continue;
-				if (seqMode != SEQ_MODE_LAYER && oscid != OscSequences[sequence]) continue;
+		if (params[P_SET(oscid, P_LEVEL)]->value < 0.001) continue;
+		if (seqMode != SEQ_MODE_LAYER && oscid != OscSequences[sequence]) continue;
 
-				if (unisonCount <= 1)
-				{
-					osc[oscid]->NoteOn(midievent->midiData[1], midievent->midiData[2]);
-				}
-				else
-				{
-					double detuneStep = params[P_UNISON_DETUNE]->value / unisonCount;
-					double detune = -0.5 * params[P_UNISON_DETUNE]->value;
-					for (int unisonIdx = 0; unisonIdx < unisonCount; unisonIdx++)
-					{
-						osc[oscid]->NoteOn(midievent->midiData[1], midievent->midiData[2], detune, (double)(rand() % 30000) / 30000.0);
-						detune += detuneStep;
-					}
-				}
-			}
-			// Advance sequence
-			if (seqMode != SEQ_MODE_LAYER)
+		if (unisonCount <= 1)
+		{
+			osc[oscid]->NoteOn(key, velocity);
+		}
+		else
+		{
+			double detuneStep = params[P_UNISON_DETUNE]->value / unisonCount;
+			double detune = -0.5 * params[P_UNISON_DETUNE]->value;
+			for (int unisonIdx = 0; unisonIdx < unisonCount; unisonIdx++)
 			{
-				sequence++;
-				if (seqMode == SEQ_MODE_UP && sequence >= 3) sequence = 0;
-				else if (seqMode == SEQ_MODE_UP_AND_DOWN && sequence >= 4) sequence = 0;
-				else if (seqMode == SEQ_MODE_RANDOM) sequence = predictableRandom->next(3);
+				osc[oscid]->NoteOn(key, velocity, detune, (double)(rand() % 30000) / 30000.0);
+				detune += detuneStep;
 			}
-		}
-		else if ((char)midievent->midiData[0] >> 4 == MIDI_PITCH_BEND)
-		{
-			double pitchBendValue = midievent->midiData[2] * 128 + midievent->midiData[1];
-			// http://dsp.stackexchange.com/questions/1645/converting-a-pitch-bend-midi-value-to-a-normal-pitch-value
-			double pitchMultiplier = pow(2, (pitchBendValue - MIDI_PITCH_BEND_CENTER) / MIDI_PITCH_BEND_CENTER);
-			for (int oscid = 0; oscid < NUM_PARAM_SETS; oscid++)
-			{
-				osc[oscid]->SetPitchMultiplier(pitchMultiplier);
-			}
-		}
-		else if ((char)midievent->midiData[0] >> 4 == MIDI_CC)
-		{
-			CChanges->onControllerChange(midievent->midiData[1], midievent->midiData[2]);
-		}
-		else if ((char)midievent->midiData[0] >> 4 == MIDI_AFTERTOUCH)
-		{
-			CChanges->onControllerChange(AFTERTOUCH_CC_NUMBER, midievent->midiData[1]);
 		}
 	}
-	return 0;
+	// Advance sequence
+	if (seqMode != SEQ_MODE_LAYER)
+	{
+		sequence++;
+		if (seqMode == SEQ_MODE_UP && sequence >= 3) sequence = 0;
+		else if (seqMode == SEQ_MODE_UP_AND_DOWN && sequence >= 4) sequence = 0;
+		else if (seqMode == SEQ_MODE_RANDOM) sequence = predictableRandom->next(3);
+	}
 }
 
-void WaveSynth::processReplacing(float** inputs, float** outputs,
-	VstInt32 sampleFrames) {
-	VstTimeInfo* timeInfo = getTimeInfo(kVstTransportChanged);
-	if (timeInfo != NULL)
+void WaveSynth::noteOff(int key)
+{
+	for (int oscid = 0; oscid < NUM_PARAM_SETS; oscid++)
+		osc[oscid]->NoteOff(key);
+}
+
+void WaveSynth::processMidi(const uint8_t *data)
+{
+	if (!activated)
+		return;
+	const char status = (char)data[0] >> 4;
+	if (status == MIDI_NOTE_OFF || (status == MIDI_NOTE_ON && data[2] == 0))
 	{
-		if ((timeInfo->flags & kVstTransportChanged) && !(timeInfo->flags & kVstTransportPlaying))
+		noteOff(data[1]);
+	}
+	else if (status == MIDI_NOTE_ON)
+	{
+		noteOn(data[1], data[2]);
+	}
+	else if (status == MIDI_PITCH_BEND)
+	{
+		double pitchBendValue = data[2] * 128 + data[1];
+		// http://dsp.stackexchange.com/questions/1645/converting-a-pitch-bend-midi-value-to-a-normal-pitch-value
+		double pitchMultiplier = pow(2, (pitchBendValue - MIDI_PITCH_BEND_CENTER) / MIDI_PITCH_BEND_CENTER);
+		for (int oscid = 0; oscid < NUM_PARAM_SETS; oscid++)
 		{
-			sequence = 0;
-			predictableRandom->seed(randomSeed);
+			osc[oscid]->SetPitchMultiplier(pitchMultiplier);
 		}
+	}
+	else if (status == MIDI_CC)
+	{
+		CChanges->onControllerChange(data[1], data[2]);
+	}
+	else if (status == MIDI_AFTERTOUCH)
+	{
+		CChanges->onControllerChange(AFTERTOUCH_CC_NUMBER, data[1]);
+	}
+}
+
+void WaveSynth::setTransportState(bool isPlaying, bool hasTempo, double tempo)
+{
+	if (hasTempo)
+		this->tempo = tempo;
+	// Restart the oscillator sequence when the playback stops
+	if (transportWasPlaying && !isPlaying)
+	{
+		sequence = 0;
+		predictableRandom->seed(randomSeed);
+	}
+	transportWasPlaying = isPlaying;
+}
+
+void WaveSynth::processReplacing(float** outputs, int sampleFrames)
+{
+	if (!activated)
+	{
+		memset(outputs[0], 0, sampleFrames * sizeof(float));
+		memset(outputs[1], 0, sampleFrames * sizeof(float));
+		return;
 	}
 	const double lfoStreoOffset = params[P_GLOBAL_LFO_STEREO_OFFSET]->value * 0.5,
 		totalLevel = params[P_TOTAL_LEVEL]->value,

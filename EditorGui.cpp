@@ -1,5 +1,5 @@
 #include "EditorGui.h"
-#include "Resource.h"
+#include "CBitmapLoader.h"
 #include "WaveSynth.h"
 #include "Plugins.h"
 #include "strrpl.h"
@@ -10,14 +10,9 @@ extern void WriteLog(const char*, double);
 
 const int knobSize = 48;
 
-AEffGUIEditor* createEditor(AudioEffectX* effect)
-{
-	return new EditorGui(effect);
-}
-
 //------------------------------------------------------------------------------------
-EditorGui::EditorGui(void* ptr)
-	: AEffGUIEditor(ptr)
+EditorGui::EditorGui(WaveSynth* effect)
+	: AEffGUIEditorFst(effect), effect(effect)
 {
 	checkBanks = true;
 	presetNum = 0;
@@ -134,32 +129,40 @@ void EditorGui::fillMacroMenu(MacroMenu* menu, int tag)
 }
 
 //------------------------------------------------------------------------------------
+void EditorGui::getEditorSize(int *width, int *height)
+{
+	*width = knobSize * SET_PARAMS_COUNT;
+	*height = knobSize * ((NUM_PARAM_SETS + 1) * 2 + 1) + knobSize / 2;
+}
+
 bool EditorGui::open(void* ptr)
 {
-	CRect frameSize(0, 0, knobSize * SET_PARAMS_COUNT, knobSize * ((NUM_PARAM_SETS + 1) * 2 + 1) + knobSize / 2);
+	int width, height;
+	getEditorSize(&width, &height);
+	CRect frameSize(0, 0, width, height);
 	CColor cBg = kWhiteCColor, cFg = { 4, 87, 128, 255 };
 	ERect * wSize;
 	getRect(&wSize);
 	wSize->top = wSize->left = 0;
-	wSize->bottom = (VstInt16)frameSize.bottom;
-	wSize->right = (VstInt16)frameSize.right;
+	wSize->bottom = (short)frameSize.bottom;
+	wSize->right = (short)frameSize.right;
 	CFrame * newFrame = new CFrame(frameSize, ptr, this);
 	newFrame->setBackgroundColor(cBg);
 
 	//-- load some bitmaps we need
 	CBitmap * background, *backgrounds[10];
-	backgrounds[0] = new CBitmap(IDB_BG_WAVEFORM);
-	backgrounds[1] = new CBitmap(IDB_BG_DISTORTION);
-	backgrounds[2] = new CBitmap(IDB_BG_ENVELOPE);
-	backgrounds[3] = new CBitmap(IDB_BG_LFO);
-	backgrounds[4] = new CBitmap(IDB_BG_FILTER);
-	backgrounds[5] = new CBitmap(IDB_BG_LEVEL);
-	backgrounds[6] = new CBitmap(IDB_BG_MODULATION);
-	backgrounds[7] = new CBitmap(IDB_BG_TUNING);
-	backgrounds[8] = new CBitmap(IDB_BG_PAN);
-	backgrounds[9] = new CBitmap(IDB_BG_BLANK);
+	backgrounds[0] = CBitmapLoader::load("images/background-wave.bmp");
+	backgrounds[1] = CBitmapLoader::load("images/background-distort.bmp");
+	backgrounds[2] = CBitmapLoader::load("images/background-envelope.bmp");
+	backgrounds[3] = CBitmapLoader::load("images/background-lfo.bmp");
+	backgrounds[4] = CBitmapLoader::load("images/background-filter.bmp");
+	backgrounds[5] = CBitmapLoader::load("images/background-level.bmp");
+	backgrounds[6] = CBitmapLoader::load("images/background-modulation.bmp");
+	backgrounds[7] = CBitmapLoader::load("images/background-tuning.bmp");
+	backgrounds[8] = CBitmapLoader::load("images/background-pan.bmp");
+	backgrounds[9] = CBitmapLoader::load("images/background.bmp");
 	background = backgrounds[0];
-	CBitmap * handle = new CBitmap(IDB_HANDLE);
+	CBitmap * handle = CBitmapLoader::load("images/handle.bmp");
 	int controlIndex = 0, firstGlobalParam = P_SET(NUM_PARAM_SETS - 1, SET_PARAMS_COUNT);
 	for (int oscid = 0; oscid < NUM_PARAM_SETS + 1; oscid++)
 	{
@@ -284,7 +287,7 @@ bool EditorGui::open(void* ptr)
 		setParameter(i, effect->getParameter(i));
 	}
 
-	frame = newFrame;
+	//frame = newFrame;
 
 	return true;
 }
@@ -319,14 +322,14 @@ MacroCommand* MacroMenu::getCurrentCommand()
 		initial.push_back(var);										\
 	} while(0)
 
-void MacroMenu::doMacroEdits(AEffGUIEditor * editor, long lastTweakedTag)
+void MacroMenu::doMacroEdits(EditorGui * editor, long lastTweakedTag)
 {
 	auto cmd = getCurrentCommand();
 	if (cmd == nullptr)
 	{
 		return;
 	}
-	auto* effect = editor->getEffect();
+	auto* effect = editor->getSynth();
 
 	if (cmd->script == "internal:lastTweakedToAll" && lastTweakedTag >= 0)
 	{
@@ -349,9 +352,9 @@ void MacroMenu::doMacroEdits(AEffGUIEditor * editor, long lastTweakedTag)
 	else
 	{
 		extern void getWorkDir(char*);
-		char filename[1024];
-		getWorkDir(filename);
-		sprintf(filename, "%splugins\\%s", filename, cmd->script.c_str()); // % s.syn", filename, cmd->script.c_str());
+		char workDir[1024];
+		getWorkDir(workDir);
+		const std::string filename = std::string(workDir) + "plugins\\" + cmd->script;
 		std::vector<PluginVariable> initial;
 		char name[100];
 		char type = TYPE_TEMPORARY;
@@ -369,8 +372,7 @@ void MacroMenu::doMacroEdits(AEffGUIEditor * editor, long lastTweakedTag)
 		}
 
 		strcpy(name, "tempo");
-		VstTimeInfo* timeInfo = ((WaveSynth*)effect)->getTimeInfo(kVstTempoValid);
-		value = (float)timeInfo->tempo;
+		value = (float)effect->getTempo();
 		ADD_PLUGIN_PARAM();
 
 		strcpy(name, "randomSeed");
@@ -398,7 +400,7 @@ void MacroMenu::doMacroEdits(AEffGUIEditor * editor, long lastTweakedTag)
 			if (index > -1)
 			{
 				editor->setParameter(index, effect->getParameter(index));
-				((EditorGui*)editor)->valueChanged(index);
+				editor->valueChanged(index);
 			}
 		}
 	}

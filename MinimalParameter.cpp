@@ -3,13 +3,13 @@
 #include <cstdio>
 
 extern void WriteLog(const char*, double);
-MinimalParameter::MinimalParameter(char *name, double defaultVal, double scaling, double addition, char *label)
+MinimalParameter::MinimalParameter(const char *name, double defaultVal, double scaling, double addition, const char *label)
 {
-	strcpy_s(this->name, 32, name);
+	snprintf(this->name, sizeof(this->name), "%s", name);
 	this->value = defaultVal;
 	this->scaling = scaling;
 	this->addition = addition;
-	strcpy_s(this->label, 8, label);
+	snprintf(this->label, sizeof(this->label), "%s", label);
 	displayCount = 0;
 	showAsInt = 0;
 }
@@ -18,14 +18,14 @@ MinimalParameter::~MinimalParameter()
 {
 }
 
-void MinimalParameter::AddDisplayMapping(char *mapping)
+void MinimalParameter::AddDisplayMapping(const char *mapping)
 {
 	if (displayCount == DISPLAY_MAPPINGS_MAX)
 		return;
 	if (strlen(mapping) + 1 > DISPLAY_MAPPINGS_LEN)
 		displayMap[displayCount++][0] = 0;
 	else
-		strcpy_s(displayMap[displayCount++], DISPLAY_MAPPINGS_LEN, mapping);
+		strcpy(displayMap[displayCount++], mapping);
 }
 
 void MinimalParameter::ClearDisplayMappings()
@@ -35,20 +35,30 @@ void MinimalParameter::ClearDisplayMappings()
 
 void MinimalParameter::GetDisplayText(char *out, int bsize)
 {
+	GetDisplayText(out, bsize, value);
+}
+
+void MinimalParameter::GetDisplayText(char *out, int bsize, double value)
+{
 	if (displayCount == 0)
 	{
 		if (showAsInt)
-			sprintf_s(out, bsize, "%d", (int)(value * scaling + addition));
+			snprintf(out, bsize, "%d", (int)(value * scaling + addition));
 		else
-			sprintf_s(out, bsize, "%.2f", value * scaling + addition);
+			snprintf(out, bsize, "%.2f", value * scaling + addition);
 	}
 	else
 	{
-		strcpy_s(out, bsize, displayMap[GetSelection()]);
+		snprintf(out, bsize, "%s", displayMap[GetSelection(value)]);
 	}
 }
 
 int MinimalParameter::GetSelection()
+{
+	return GetSelection(value);
+}
+
+int MinimalParameter::GetSelection(double value)
 {
 	return (int)(value * 0.99 * displayCount);
 }

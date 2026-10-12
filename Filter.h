@@ -91,6 +91,42 @@ public:
 	}
 };
 
+class FourstageLowpassFilter
+{
+	Filter f0, f1, f2, f3;
+public:
+	FourstageLowpassFilter(float samplerate)
+		: f0(samplerate), f1(samplerate), f2(samplerate), f3(samplerate)
+	{
+	}
+
+	void update(float hz)
+	{
+		f0.updateLowpass(hz);
+		f1.updateLowpass(hz);
+		f2.updateLowpass(hz);
+		f3.updateLowpass(hz);
+	}
+
+	float process(float input)
+	{
+		float output = input;
+		output = f0.processLowpass(output);
+		output = f1.processLowpass(output);
+		output = f2.processLowpass(output);
+		output = f3.processLowpass(output);
+		return output;
+	}
+
+	void set_samplerate(int samplerate)
+	{
+		f0.setSampleRate(samplerate);
+		f1.setSampleRate(samplerate);
+		f2.setSampleRate(samplerate);
+		f3.setSampleRate(samplerate);
+	}
+};
+
 class DcFilter : Filter
 {
 public:
