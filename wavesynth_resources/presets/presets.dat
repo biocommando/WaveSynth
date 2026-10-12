@@ -5749,7 +5749,7 @@ f LowCut 0.000
 f L2LFOs 0.000
 f L2Clip 0.084
 f LStereo 0.000
-$Preset #66
+$Glitchy dream
 0
 88
 i Bank_1 6
@@ -5840,7 +5840,7 @@ f LowCut 0.000
 f L2LFOs 0.181
 f L2Clip 0.731
 f LStereo 0.912
-$Preset #67
+$Frozen organ
 0
 88
 i Bank_1 2
@@ -5931,98 +5931,7 @@ f LowCut 0.000
 f L2LFOs 0.000
 f L2Clip 0.000
 f LStereo 0.000
-$Preset #68
-0
-88
-i Bank_1 2
-i Patch_1 0
-i Loop1 2
-f CuePos1 0.000
-i Octave1 3
-f Detune1 0.500
-f FCut_1 0.445
-f FRes_1 0.695
-f Wavshp1 0.035
-f Attack1 0.000
-f Decay1 0.000
-f Sust.1 0.745
-f Tail.1 0.410
-f E2Cut_1 0.500
-i LFOShp1 0
-f LFOFrq1 0.000
-f LFO2Pt1 0.000
-f LFO2Cu1 0.000
-f LFO2Fl1 0.000
-f LFO2Lv1 0.000
-f Pan_1 0.500
-f Level_1 1.000
-i Bank_2 2
-i Patch_2 0
-i Loop2 2
-f CuePos2 0.000
-i Octave2 2
-f Detune2 0.500
-f FCut_2 0.445
-f FRes_2 0.695
-f Wavshp2 0.035
-f Attack2 0.000
-f Decay2 0.000
-f Sust.2 0.745
-f Tail.2 0.410
-f E2Cut_2 0.500
-i LFOShp2 0
-f LFOFrq2 0.000
-f LFO2Pt2 0.000
-f LFO2Cu2 0.000
-f LFO2Fl2 0.000
-f LFO2Lv2 0.000
-f Pan_2 0.500
-f Level_2 1.000
-i Bank_3 0
-i Patch_3 2
-i Loop3 2
-f CuePos3 0.000
-i Octave3 1
-f Detune3 0.500
-f FCut_3 0.240
-f FRes_3 0.440
-f Wavshp3 0.035
-f Attack3 0.000
-f Decay3 0.000
-f Sust.3 0.745
-f Tail.3 0.410
-f E2Cut_3 0.500
-i LFOShp3 0
-f LFOFrq3 0.000
-f LFO2Pt3 0.000
-f LFO2Cu3 0.000
-f LFO2Fl3 0.000
-f LFO2Lv3 0.000
-f Pan_3 0.500
-f Level_3 0.640
-f Level 0.500
-f Unison 0.000
-f UDetune 0.000
-f DelayTm 0.000
-f DlyFeed 0.000
-f DlyWet 0.000
-i OscSeq 0
-f SoftClp 0.000
-f FlngFrq 0.000
-f FlngDly 0.000
-f FlngDpt 0.000
-f FlngWet 0.000
-f LfoFreq 0.000
-i LfoType 0
-f L2Pan 0.000
-f L2Level 0.000
-f L2Delay 0.000
-f L2Flang 0.000
-f LowCut 0.180
-f L2LFOs 0.000
-f L2Clip 0.000
-f LStereo 0.000
-$Preset #69
+$Wedding for the nightmare monster
 1
 88
 i Bank_1 0
@@ -6113,3 +6022,94 @@ f LowCut 0.396
 f L2LFOs 0.467
 f L2Clip 0.397
 f LStereo 0.297
+$Timid e-piano strings
+1
+88
+i Bank_1 7
+i Patch_1 0
+i Loop1 2
+f CuePos1 0.000
+i Octave1 3
+f Detune1 0.500
+f FCut_1 0.798
+f FRes_1 0.000
+f Wavshp1 0.038
+f Attack1 0.000
+f Decay1 0.370
+f Sust.1 0.367
+f Tail.1 0.068
+f E2Cut_1 0.000
+i LFOShp1 0
+f LFOFrq1 0.084
+f LFO2Pt1 0.032
+f LFO2Cu1 0.000
+f LFO2Fl1 0.000
+f LFO2Lv1 0.000
+f Pan_1 0.500
+f Level_1 0.590
+i Bank_2 5
+i Patch_2 4
+i Loop2 2
+f CuePos2 0.000
+i Octave2 3
+f Detune2 0.500
+f FCut_2 0.540
+f FRes_2 0.000
+f Wavshp2 0.000
+f Attack2 0.226
+f Decay2 0.000
+f Sust.2 1.000
+f Tail.2 0.000
+f E2Cut_2 0.000
+i LFOShp2 0
+f LFOFrq2 0.000
+f LFO2Pt2 0.000
+f LFO2Cu2 0.000
+f LFO2Fl2 0.000
+f LFO2Lv2 0.000
+f Pan_2 0.500
+f Level_2 0.396
+i Bank_3 4
+i Patch_3 5
+i Loop3 2
+f CuePos3 0.000
+i Octave3 2
+f Detune3 0.500
+f FCut_3 0.384
+f FRes_3 0.725
+f Wavshp3 0.000
+f Attack3 0.548
+f Decay3 0.325
+f Sust.3 0.793
+f Tail.3 0.375
+f E2Cut_3 0.640
+i LFOShp3 0
+f LFOFrq3 0.000
+f LFO2Pt3 0.000
+f LFO2Cu3 0.000
+f LFO2Fl3 0.000
+f LFO2Lv3 0.000
+f Pan_3 0.500
+f Level_3 0.500
+f Level 0.500
+f Unison 0.058
+f UDetune 0.154
+f DelayTm 0.098
+f DlyFeed 0.201
+f DlyWet 0.192
+i OscSeq 0
+f SoftClp 0.000
+f FlngFrq 0.000
+f FlngDly 0.000
+f FlngDpt 0.000
+f FlngWet 0.000
+f LfoFreq 0.000
+i LfoType 0
+f L2Pan 0.000
+f L2Level 0.000
+f L2Delay 0.000
+f L2Flang 0.000
+f LowCut 0.000
+f L2LFOs 0.000
+f L2Clip 0.000
+f LStereo 0.000
