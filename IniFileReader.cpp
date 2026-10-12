@@ -15,7 +15,7 @@ IniFileReader::~IniFileReader()
 
 extern void WriteLog(const char*, double);
 
-void IniFileReader::readCharValue(char *segment, char *key, char *value)
+void IniFileReader::readCharValue(const char *segment, const char *key, char *value)
 {
 	if (file == NULL) return;
 
@@ -62,14 +62,14 @@ void IniFileReader::readCharValue(char *segment, char *key, char *value)
 	}
 }
 
-void IniFileReader::readCharValueWithIndex(char *segment, char *key, int index, char *value)
+void IniFileReader::readCharValueWithIndex(const char *segment, const char *key, int index, char *value)
 {
 	char keyWithIndex[256];
 	sprintf(keyWithIndex, "%s%d", key, index);
 	readCharValue(segment, keyWithIndex, value);
 }
 
-int IniFileReader::readIntValue(char *segment, char *key)
+int IniFileReader::readIntValue(const char *segment, const char *key)
 {
 	char value[256] = "";
 	readCharValue(segment, key, value);
@@ -78,7 +78,7 @@ int IniFileReader::readIntValue(char *segment, char *key)
 	return iValue;
 }
 
-double IniFileReader::readDoubleValue(char *segment, char *key)
+double IniFileReader::readDoubleValue(const char *segment, const char *key)
 {
 	char value[256] = "";
 	readCharValue(segment, key, value);
@@ -87,7 +87,7 @@ double IniFileReader::readDoubleValue(char *segment, char *key)
 	return dValue;
 }
 
-bool IniFileReader::readBoolValue(char *segment, char *key)
+bool IniFileReader::readBoolValue(const char *segment, const char *key)
 {
 	char value[256] = "";
 	readCharValue(segment, key, value);
@@ -97,7 +97,7 @@ bool IniFileReader::readBoolValue(char *segment, char *key)
 	return false;
 }
 
-int IniFileReader::openFile(char *fileName)
+int IniFileReader::openFile(const char *fileName)
 {
 	file = fopen(fileName, "r");
 	if (file != NULL)
