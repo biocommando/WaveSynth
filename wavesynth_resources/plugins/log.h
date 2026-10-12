@@ -19,13 +19,13 @@
 
 // Logging state
 
-char log_buffer[1024] = "";
-FILE *log_file_handle = NULL;
-const char log_lev_map[][6] = {"TRACE", "INFO ", "ERROR"};
+extern char log_buffer[1024];
+extern FILE *log_file_handle;
+static const char log_lev_map[][6] = {"TRACE", "INFO ", "ERROR"};
 
 // Actual logging implementation
 
-void log_write(const char *file, int line, int level)
+static inline void log_write(const char *file, int line, int level)
 {
     if (LOG_LEVEL > level || (LOG_FILTER[0] && strcmp(LOG_FILTER, file)))
         return;
@@ -40,7 +40,7 @@ void log_write(const char *file, int line, int level)
 #endif
 }
 
-void log_lifecycle(const char *ipc_file)
+static inline void log_lifecycle(const char *ipc_file)
 {
     if (ipc_file)
     {
@@ -58,7 +58,8 @@ void log_lifecycle(const char *ipc_file)
     }
     else
     {
-        fclose(log_file_handle);
+        if (log_file_handle)
+            fclose(log_file_handle);
         log_file_handle = NULL;
     }
 }

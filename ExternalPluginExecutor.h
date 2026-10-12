@@ -1,9 +1,10 @@
 #pragma once
 #include <cstdio>
+#include <cstring>
 #include <cstdlib>
-#include <fstream>
 #include <string>
 #include <vector>
+#include <windows.h>
 
 class ExternalPluginDto
 {
@@ -58,27 +59,19 @@ public:
 class ExternalPluginExecutor
 {
 private:
-	std::string getParamDataTransferFilePath(const std::string& fullPluginPath)
-	{
-		const std::string paramDataTransferFileName = "plugin-param-data-transfer.dat";
-		std::string paramDataTransferFilePath;
-		const auto lastBackslash = fullPluginPath.find_last_of('\\');
-		if (lastBackslash != std::string::npos)
-			paramDataTransferFilePath = fullPluginPath.substr(0, lastBackslash + 1);
-		else
-			paramDataTransferFilePath = ".\\";
-		return paramDataTransferFilePath + paramDataTransferFileName;
-	}
+	// Signature of the function exported by DLL plugins. The buffer holds consecutive
+	// null-terminated "name value" strings: the input parameters on entry and the
+	// output parameters on return. Returns the number of output strings or -1 on failure.
+	typedef int (*exec_plugin_func)(char*, size_t);
+	// Large enough for the maximum number of parameters a plugin supports (1000)
+	static constexpr size_t dllBufferSize = 256 * 1024;
 
-	std::string transferFile = "";
 	std::string fullPluginPath;
 	std::vector<ExternalPluginDto> output;
 	std::vector<ExternalPluginDto> params;
 public:
 	ExternalPluginExecutor(const std::string & fullPluginPath) : fullPluginPath(fullPluginPath)
-	{
-		transferFile = getParamDataTransferFilePath(fullPluginPath);
-	}
+	{}
 
 	std::vector<ExternalPluginDto> getOutput()
 	{
@@ -94,28 +87,38 @@ public:
 	{
 		output = {};
 
-		std::ofstream ofs;
-		ofs.open(transferFile, std::ios_base::out);
+		std::string buffer;
 		for (const auto& dto : params)
-			ofs << dto.serialize() << '\n';
-		ofs.close();
+			buffer += dto.serialize() + '\0';
 		params.clear();
+		if (buffer.size() >= dllBufferSize)
+			return false;
+		buffer.resize(dllBufferSize);
 
-		const auto fullCmd = fullPluginPath + " \"" + transferFile + "\"";
-		auto ret = system(fullCmd.c_str());
-		if (ret != 0)
+		HMODULE dll = LoadLibraryA(fullPluginPath.c_str());
+		if (!dll)
+			return false;
+		const auto execPlugin = (exec_plugin_func)GetProcAddress(dll, "exec_plugin");
+		if (!execPlugin)
+		{
+			FreeLibrary(dll);
+			return false;
+		}
+		// The DLL is unloaded after every call so that each run starts with fresh global state
+		const int count = execPlugin(&buffer[0], buffer.size());
+		FreeLibrary(dll);
+		if (count < 0)
 			return false;
 
-		std::ifstream ifs;
-		ifs.open(transferFile, std::ios_base::out);
-
-		for (std::string s; std::getline(ifs, s);)
+		size_t offset = 0;
+		for (int i = 0; i < count && offset < buffer.size(); i++)
 		{
+			const char* s = buffer.c_str() + offset;
 			const ExternalPluginDto dto(s);
 			if (dto.isOk())
 				output.push_back(dto);
+			offset += strlen(s) + 1;
 		}
-
 		return true;
 	}
 };

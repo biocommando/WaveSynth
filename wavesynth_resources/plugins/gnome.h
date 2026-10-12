@@ -4,9 +4,9 @@
 #include "pluginutil.h"
 #include <time.h>
 
-int pindex = 0;
+extern int pindex;
 
-void qmarkrpl(char *out, const char *in)
+static inline void qmarkrpl(char *out, const char *in)
 {
     int i;
     strcpy(out, in);
@@ -18,7 +18,7 @@ void qmarkrpl(char *out, const char *in)
     LOG_TRACE("Resolved %s notation to %s", in, out);
 }
 
-Parameter *get_pqmark_ptr(const char *name)
+static inline Parameter *get_pqmark_ptr(const char *name)
 {
     char buf[20];
     qmarkrpl(buf, name);
@@ -28,8 +28,8 @@ Parameter *get_pqmark_ptr(const char *name)
 #define PQ(name) \
     ((get_pqmark_ptr(name) == NULL) ? &parameters[LAST_PARAM] : get_pqmark_ptr(name))->value
 
-int srand_called = 0;
-double random()
+extern int srand_called;
+static inline double random()
 {
     if (!srand_called)
     {
@@ -39,12 +39,15 @@ double random()
     return (double)(rand() % 10000) / 10000.0;
 }
 
-Parameter *int_params[MAX_NUM_PARAMS];
-int num_int_params = 0;
+extern Parameter *int_params[MAX_NUM_PARAMS];
+extern int num_int_params;
 
-void param_as_integer(const char *name)
+static inline void param_as_integer(const char *name)
 {
-    int_params[num_int_params] = get_parameter_ptr(name);
+    Parameter *p = get_parameter_ptr(name);
+    if (!p)
+        return;
+    int_params[num_int_params] = p;
     LOG_TRACE("Marked param %s as integer", name);
     num_int_params++;
 }
@@ -52,7 +55,7 @@ void param_as_integer(const char *name)
 #define FOR_EACH_PSET \
     for (pindex = 1; pindex <= 3; pindex++)
 
-void params_as_integer(const char *namex)
+static inline void params_as_integer(const char *namex)
 {
     FOR_EACH_PSET
     {
@@ -62,7 +65,7 @@ void params_as_integer(const char *namex)
     }
 }
 
-void mark_interger_params()
+static inline void mark_interger_params()
 {
     for (int i = 0; i < num_int_params; i++)
     {

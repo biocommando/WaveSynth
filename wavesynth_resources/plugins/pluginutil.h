@@ -24,13 +24,13 @@ typedef struct
     double value;
 } Parameter;
 
-Parameter parameters[MAX_NUM_PARAMS];
-int init = 0;
+extern Parameter parameters[MAX_NUM_PARAMS];
+extern int init;
 
 #define FOR_EACH_PARAMETER(iteration_idx) \
     for (int iteration_idx = 0; parameters[iteration_idx].name[0]; iteration_idx++)
 
-Parameter *get_parameter_ptr(const char *name)
+static inline Parameter *get_parameter_ptr(const char *name)
 {
     if (!init || !name || !name[0])
         return NULL;
@@ -46,7 +46,7 @@ Parameter *get_parameter_ptr(const char *name)
     return NULL;
 }
 
-int get_string_parameter(const char *name, char *value)
+static inline int get_string_parameter(const char *name, char *value)
 {
     if (!init || !name)
         return -1;
@@ -77,7 +77,7 @@ int get_string_parameter(const char *name, char *value)
     return -1;
 }
 
-void new_parameter(const char *name, double value)
+static inline void new_parameter(const char *name, double value)
 {
     if (get_parameter_ptr(name) == NULL && strlen(name) < STR_LENGTH)
     {
@@ -100,7 +100,7 @@ void new_parameter(const char *name, double value)
 
 #define P(name) PS(#name)
 
-void read_ipc_data(const char *filename)
+static inline void read_ipc_data(const char *filename)
 {
     parameters[LAST_PARAM].value = 0;
     parameters[0].name[0] = 0;
@@ -120,7 +120,7 @@ void read_ipc_data(const char *filename)
     fclose(f);
 }
 
-void save_ipc_data(char **argv)
+static inline void save_ipc_data(char **argv)
 {
     if (!init)
         return;
@@ -136,29 +136,122 @@ void save_ipc_data(char **argv)
     fclose(f);
 }
 
+// DLL plugins exchange parameters through a buffer of consecutive
+// null-terminated "name value" strings instead of a file
+static inline void read_ipc_data_str(const char *str, size_t sz)
+{
+    parameters[LAST_PARAM].value = 0;
+    parameters[0].name[0] = 0;
+    init = 1;
+    size_t offset = 0;
+    while (offset < sz && str[offset])
+    {
+        const char *p = str + offset;
+        char name[100];
+        double value;
+        if (sscanf(p, "%99s %lf", name, &value) == 2)
+        {
+            new_parameter(name, value);
+        }
+        offset += strlen(p) + 1;
+    }
+}
+
+// Returns the number of strings written or -1 if they don't fit in the buffer.
+// The strings are followed by an empty string when there is room, so that the
+// buffer can be read again with read_ipc_data_str.
+static inline int save_ipc_data_str(char *str, size_t sz)
+{
+    if (!init)
+        return -1;
+    size_t offset = 0;
+    int count = 0;
+    FOR_EACH_PARAMETER(i)
+    {
+        char buf[512];
+        int len = snprintf(buf, sizeof(buf), "%s %lf", parameters[i].name, parameters[i].value);
+        if (len < 0 || len >= (int)sizeof(buf) || offset + len + 1 > sz)
+            return -1;
+        memcpy(str + offset, buf, len + 1);
+        offset += len + 1;
+        count++;
+    }
+    if (offset < sz)
+        str[offset] = 0;
+    return count;
+}
+
 #define MAIN_ARGS int argc, char **argv
 
-#define INIT                \
+#define INIT_EXE            \
     if (argc < 2)           \
         return 1;           \
     log_lifecycle(argv[1]); \
     read_ipc_data(argv[1])
 
-#define FINALIZE            \
+#define FINALIZE_EXE     \
     save_ipc_data(argv); \
-    log_lifecycle(NULL);    \
+    log_lifecycle(NULL); \
     return 0
 
-#define PLUGIN()                             \
+#define PLUGIN_EXE()                         \
     void plugin_implementation_function();   \
     int main(MAIN_ARGS)                      \
     {                                        \
-        INIT;                                \
+        INIT_EXE;                            \
         LOG("Plugin init done %s", argv[0]); \
         plugin_implementation_function();    \
         LOG("Plugin executed");              \
-        FINALIZE;                            \
+        FINALIZE_EXE;                        \
     }                                        \
     void plugin_implementation_function()
+
+#ifdef LOGGING
+#include <windows.h>
+// Logs into log.txt next to the DLL, like the exe plugins do next to the ipc file
+#define INIT_DLL_LOGGING                                                            \
+    {                                                                               \
+        HMODULE module;                                                             \
+        char dll_path[MAX_PATH];                                                    \
+        if (GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |             \
+                                   GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,    \
+                               (LPCSTR)parameters, &module) &&                      \
+            GetModuleFileNameA(module, dll_path, MAX_PATH))                         \
+            log_lifecycle(dll_path);                                                \
+    }
+#else
+#define INIT_DLL_LOGGING
+#endif
+
+#define INIT_DLL     \
+    INIT_DLL_LOGGING \
+    read_ipc_data_str(str, sz)
+
+#define FINALIZE_DLL     \
+    log_lifecycle(NULL); \
+    return save_ipc_data_str(str, sz)
+
+#define PLUGIN_DLL()                                            \
+    void plugin_implementation_function();                      \
+    __declspec(dllexport) int exec_plugin(char *str, size_t sz) \
+    {                                                           \
+        INIT_DLL;                                               \
+        LOG("Plugin init done");                                \
+        plugin_implementation_function();                       \
+        LOG("Plugin executed");                                 \
+        FINALIZE_DLL;                                           \
+    }                                                           \
+    void plugin_implementation_function()
+
+// Plugins are built as executables unless compiled with -DBUILD_DLL
+#ifdef BUILD_DLL
+#define PLUGIN() PLUGIN_DLL()
+#define INIT INIT_DLL
+#define FINALIZE FINALIZE_DLL
+#else
+#define PLUGIN() PLUGIN_EXE()
+#define INIT INIT_EXE
+#define FINALIZE FINALIZE_EXE
+#endif
 
 #endif

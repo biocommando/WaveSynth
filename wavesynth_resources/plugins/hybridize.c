@@ -1,20 +1,41 @@
 #include "pluginutil.h"
+#include <windows.h>
 
-int main(MAIN_ARGS)
+typedef int (*exec_plugin_func)(char *, size_t);
+
+// Runs another plugin DLL from the same directory as this one on the given
+// parameter buffer. Returns the number of output strings or -1 on failure.
+static int exec_sub_plugin(const char *dll_name, char *str, size_t sz)
+{
+    HMODULE self;
+    char path[MAX_PATH];
+    if (!GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                                GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                            (LPCSTR)&exec_sub_plugin, &self) ||
+        !GetModuleFileNameA(self, path, MAX_PATH))
+        return -1;
+    char *last_slash = strrchr(path, '\\');
+    if (!last_slash || strlen(path) + strlen(dll_name) >= MAX_PATH)
+        return -1;
+    strcpy(last_slash + 1, dll_name);
+
+    LOG("Path is %s", path);
+
+    HMODULE dll = LoadLibraryA(path);
+    if (!dll)
+        return -1;
+    exec_plugin_func sub_exec_plugin = (exec_plugin_func)GetProcAddress(dll, "exec_plugin");
+    int count = sub_exec_plugin ? sub_exec_plugin(str, sz) : -1;
+    FreeLibrary(dll);
+    return count;
+}
+
+__declspec(dllexport) int exec_plugin(char *str, size_t sz)
 {
     INIT;
-    LOG("Initialized plugin %s", argv[0]);
+    LOG("Initialized plugin");
 
-    char path[2048];
-    strcpy(path, argv[1]);
-    for (int i = strlen(path) - 1; path[i] != '\\'; i--)
-    {
-        path[i] = 0;
-    }
-    
-    LOG("Base path = %s", path);
-
-    Parameter p_orig[MAX_NUM_PARAMS];
+    static Parameter p_orig[MAX_NUM_PARAMS];
     memcpy(p_orig, parameters, sizeof(parameters));
 
     int type = P(type);
@@ -22,26 +43,23 @@ int main(MAIN_ARGS)
 
     LOG("Type = %d", type);
 
+    const char *dll_name;
     if (type == 0)
-        strcat(path, "pad.exe");
+        dll_name = "pad.dll";
     else if (type == 1)
-        strcat(path, "lead.exe");
+        dll_name = "lead.dll";
     else if (type == 2)
-        strcat(path, "bass.exe");
+        dll_name = "bass.dll";
     else
         return -1;
 
-    strcat(path, " ");
-    strcat(path, argv[1]);
-
-    LOG("Path is %s", path);
-
-    if (system(path) != 0)
+    // The input parameters are already read, so the buffer can be handed over
+    if (exec_sub_plugin(dll_name, str, sz) < 0)
         return -1;
 
-    LOG("Sys call done");
+    LOG("Sub plugin call done");
 
-    INIT;
+    read_ipc_data_str(str, sz);
 
     LOG("new init done");
     for (int i = 0; p_orig[i].name[0]; i++)
